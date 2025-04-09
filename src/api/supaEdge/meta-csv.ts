@@ -10,7 +10,7 @@ async function metaToCsv(
   eventname: string,
   eventdate: string
 ): Promise<ApiResponse> {
-  const url = "/api/csv-meta";
+  const url = "/api/supaEdge/api_routes/csv-meta";
 
   console.log("Using API route:", url);
 

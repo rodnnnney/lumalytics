@@ -35,75 +35,75 @@ export default function Home() {
     return data;
   };
 
-  useEffect(() => {
-    if (metaData && metaData.length > 0) {
-      const attendeesTotal = metaData.reduce(
-        (sum, event) =>
-          sum + (parseInt(event.Attendees as unknown as string) || 0),
-        0
-      );
-      setTotalCheckIns(attendeesTotal);
+  // useEffect(() => {
+  //   if (metaData && metaData.length > 0) {
+  //     const attendeesTotal = metaData.reduce(
+  //       (sum, event) =>
+  //         sum + (parseInt(event.Attendees as unknown as string) || 0),
+  //       0
+  //     );
+  //     setTotalCheckIns(attendeesTotal);
 
-      const reservationsTotal = metaData.reduce(
-        (sum, event) =>
-          sum + (parseInt(event.Reservations as unknown as string) || 0),
-        0
-      );
-      const rate =
-        reservationsTotal > 0
-          ? Math.round((attendeesTotal / reservationsTotal) * 100)
-          : 0;
-      setCheckInRate(`${rate}%`);
+  //     const reservationsTotal = metaData.reduce(
+  //       (sum, event) =>
+  //         sum + (parseInt(event.Reservations as unknown as string) || 0),
+  //       0
+  //     );
+  //     const rate =
+  //       reservationsTotal > 0
+  //         ? Math.round((attendeesTotal / reservationsTotal) * 100)
+  //         : 0;
+  //     setCheckInRate(`${rate}%`);
 
-      const calculatedPieGraphData: PieGraphDataItem[] = [
-        {
-          label: "Attendees",
-          value: attendeesTotal,
-          fill: "var(--light-green)",
-          // Add other required props if PieGraph expects them
-          // title: "Pie Chart",
-          // description: "January - June 2024",
-          // trendingText: "Trending up by 5.2% this month",
-          // footerText: "Showing total attendees for the last 6 months",
-        },
-        {
-          label: "RSVPs",
-          value: reservationsTotal,
-          fill: "var(--dark-green)",
-          // Add other required props if PieGraph expects them
-          // title: "Pie Chart",
-          // description: "January - June 2024",
-          // trendingText: "Trending up by 5.2% this month",
-          // footerText: "Showing total reservations for the last 6 months",
-        },
-      ];
+  //     const calculatedPieGraphData: PieGraphDataItem[] = [
+  //       {
+  //         label: "Attendees",
+  //         value: attendeesTotal,
+  //         fill: "var(--light-green)",
+  //         // Add other required props if PieGraph expects them
+  //         // title: "Pie Chart",
+  //         // description: "January - June 2024",
+  //         // trendingText: "Trending up by 5.2% this month",
+  //         // footerText: "Showing total attendees for the last 6 months",
+  //       },
+  //       {
+  //         label: "RSVPs",
+  //         value: reservationsTotal,
+  //         fill: "var(--dark-green)",
+  //         // Add other required props if PieGraph expects them
+  //         // title: "Pie Chart",
+  //         // description: "January - June 2024",
+  //         // trendingText: "Trending up by 5.2% this month",
+  //         // footerText: "Showing total reservations for the last 6 months",
+  //       },
+  //     ];
 
-      setPieGraphData(calculatedPieGraphData); // Set the calculated data
+  //     setPieGraphData(calculatedPieGraphData); // Set the calculated data
 
-      const calculatedChartData =
-        metaData
-          ?.map((event) => ({
-            date: event.date,
-            Reservations:
-              parseInt(event.Reservations as unknown as string) || 0,
-            Attendees: parseInt(event.Attendees as unknown as string) || 0,
-            eventName: event.eventName,
-          }))
-          .sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA.getTime() - dateB.getTime();
-          }) || [];
-      console.log(calculatedChartData);
+  //     const calculatedChartData =
+  //       metaData
+  //         ?.map((event) => ({
+  //           date: event.date,
+  //           Reservations:
+  //             parseInt(event.Reservations as unknown as string) || 0,
+  //           Attendees: parseInt(event.Attendees as unknown as string) || 0,
+  //           eventName: event.eventName,
+  //         }))
+  //         .sort((a, b) => {
+  //           const dateA = new Date(a.date);
+  //           const dateB = new Date(b.date);
+  //           return dateA.getTime() - dateB.getTime();
+  //         }) || [];
+  //     console.log(calculatedChartData);
 
-      setChartData(calculatedChartData);
-    } else {
-      setTotalCheckIns(0);
-      setCheckInRate("0%");
-      setChartData([]);
-      setPieGraphData([]);
-    }
-  }, [metaData]);
+  //     setChartData(calculatedChartData);
+  //   } else {
+  //     setTotalCheckIns(0);
+  //     setCheckInRate("0%");
+  //     setChartData([]);
+  //     setPieGraphData([]);
+  //   }
+  // }, [metaData]);
 
   const defaultPieProps = {
     title: "Pie Chart",

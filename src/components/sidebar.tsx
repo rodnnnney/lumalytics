@@ -9,6 +9,7 @@ import {
   UsersIcon,
   CogIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "./ui/button";
 
 const navItems = [
   { name: "Home", href: "/dashboard", icon: HomeIcon },
@@ -20,6 +21,10 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+
+  const test = () => {
+    console.log("test");
+  };
 
   return (
     <div className="fixed inset-y-0 left-0 z-40 w-64 bg-white text-black shadow-[2px_0_8px_0_rgba(0,0,0,0.1)]">
@@ -45,6 +50,11 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      <div>
+        <Button onClick={test}>
+          <span>Add Event</span>
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import FileUploadDemo from "../util/csvUpload";
 import { Loader2 } from "lucide-react";
 import supabase from "@/lib/supa/supa";
 import metaToCsv from "@/api/supaEdge/meta-csv";
+import { fetchCsvAttendees } from "@/api/supaEdge/main-csv";
+import { CsvMetaPayload } from "@/types/payloads";
+import { env } from "process";
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -15,6 +18,7 @@ interface AddEventModalProps {
 interface FormData {
   eventName: string;
   date: string;
+  folderPath?: string;
   csvUrl?: string;
 }
 
@@ -34,122 +38,200 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadFn, setUploadFn] = useState<(() => Promise<void>) | null>(null);
+  const [uploadFn, setUploadFn] = useState<
+    ((customPath?: string) => Promise<void>) | null
+  >(null);
   const [feedback, setFeedback] = useState<FeedbackPopup>({
     show: false,
     success: false,
     message: "",
   });
 
-  if (!isOpen) return null;
-
   const isFormValid = formData.eventName.trim() !== "" && formData.date !== "";
 
-  const hasUnsavedChanges = () => {
+  const hasUnsavedChanges = useCallback(() => {
     return (
       formData.eventName !== "" || formData.date !== "" || hasUploadedFiles
     );
-  };
+  }, [formData.eventName, formData.date, hasUploadedFiles]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (hasUnsavedChanges()) {
       setShowConfirmDialog(true);
     } else {
       onClose();
     }
-  };
+  }, [hasUnsavedChanges, onClose]);
 
-  const handleConfirmClose = () => {
+  const handleConfirmClose = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      date: "",
+      eventName: "",
+    }));
     setShowConfirmDialog(false);
     onClose();
-  };
+  }, [onClose]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    },
+    []
+  );
 
-  const handleFileChange = (hasFiles: boolean) => {
+  const handleFileChange = useCallback((hasFiles: boolean) => {
     setHasUploadedFiles(hasFiles);
-  };
+  }, []);
 
-  const handleFilesSelected = (
-    files: File[],
-    uploadFunction: () => Promise<void>
-  ) => {
-    setSelectedFiles(files);
-    setUploadFn(() => uploadFunction);
-  };
+  const handleFilesSelected = useCallback(
+    (files: File[], uploadFunction: (customPath?: string) => Promise<void>) => {
+      setSelectedFiles(files);
+      setUploadFn(() => uploadFunction);
+    },
+    []
+  );
 
-  const closeFeedback = () => {
+  const closeFeedback = useCallback(() => {
     setFeedback((prev) => ({ ...prev, show: false }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!uploadFn) return;
+  const importTable = async (payload: CsvAttendeesPayload) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    setIsSubmitting(true);
-    try {
-      await uploadFn();
-
-      const fileName = selectedFiles[0].name;
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      const eventId = crypto.randomUUID();
-
-      const response = await metaToCsv(
-        "csvs",
-        `test/${fileName}`,
-        user.id,
-        eventId,
-        formData.eventName,
-        formData.date
-      );
-
-      if (response.error) {
-        setFeedback({
-          show: true,
-          success: false,
-          message: "Error creating event",
-          details: response.error,
-        });
-        throw new Error(response.error);
-      }
-
-
-      setFeedback({
-        show: true,
-        success: true,
-        message: "Event created successfully",
-        details: `Event ID: ${eventId}, File: ${fileName}`,
-      });
-
-      setTimeout(() => {
-        closeFeedback();
-        onClose();
-      }, 100000);
-    } catch (error) {
-      console.error("Error creating event:", error);
-      if (!feedback.show) {
-        setFeedback({
-          show: true,
-          success: false,
-          message: "Error creating event",
-          details: error instanceof Error ? error.message : String(error),
-        });
-      }
-    } finally {
-      setIsSubmitting(false);
+    if (!session?.access_token) {
+      throw new Error("No authentication token available - please log in");
     }
+
+    const { data, error } = await supabase.functions.invoke("csv-attendees", {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: payload,
+    });
+
+    return { data, error };
   };
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!uploadFn) return;
+
+      setIsSubmitting(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        const folderPath = `${user.id}/${formData.eventName || "untitled"}`;
+        await uploadFn(user.id);
+
+        const fileName = selectedFiles[0].name;
+        const eventId = crypto.randomUUID();
+        const filePath = `${folderPath}/${fileName}`;
+
+        // const response = await metaToCsv(
+        //   "csvs",
+        //   filePath,
+        //   user.id,
+        //   eventId,
+        //   formData.eventName,
+        //   formData.date
+        // );
+
+        const { data, error } = await importTable({
+          bucket: "csvs", // ✅ match your upload bucket
+          path: `${user.id}/${selectedFiles[0].name}`, // ✅ match your upload path
+          userid: user.id,
+          eventid: eventId,
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        // try {
+        //   const csvResponse = await fetchCsvAttendees({
+        //     bucket: "csvs",
+        //     path: filePath,
+        //     userid: user.id,
+        //     eventid: eventId,
+        //   });
+
+        //   if (csvResponse.error) {
+        //     throw new Error(csvResponse.error || "Failed to process CSV");
+        //   }
+        // } catch (csvError) {
+        //   console.error("Error processing CSV:", csvError);
+        //   setFeedback({
+        //     show: true,
+        //     success: false,
+        //     message: "Error processing CSV",
+        //     details:
+        //       csvError instanceof Error ? csvError.message : String(csvError),
+        //   });
+        //   throw csvError;
+        // }
+
+        // if (response.error) {
+        //   setFeedback({
+        //     show: true,
+        //     success: false,
+        //     message: "Error creating event",
+        //     details: response.error,
+        //   });
+        //   throw new Error(response.error);
+        // }
+
+        setFeedback({
+          show: true,
+          success: true,
+          message: "Event created successfully",
+          details: `Event ID: ${eventId}, File: ${fileName}`,
+        });
+      } catch (error) {
+        console.error("Error creating event:", error);
+        if (!feedback.show) {
+          setFeedback({
+            show: true,
+            success: false,
+            message: "Error creating event",
+            details: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [uploadFn, selectedFiles, formData, feedback.show]
+  );
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (feedback.show && feedback.success) {
+      timeoutId = setTimeout(() => {
+        setFeedback((prev) => ({ ...prev, show: false }));
+        onClose();
+      }, 10000);
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [feedback.show, feedback.success, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -200,6 +282,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
             <FileUploadDemo
               onFileChange={handleFileChange}
               onFilesSelected={handleFilesSelected}
+              bucketName="csvs"
             />
           </div>
 

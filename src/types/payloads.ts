@@ -11,3 +11,10 @@ export interface ApiResponse {
   message?: string;
   error?: string;
 }
+
+export interface CsvAttendeesPayload {
+  bucket: string;
+  path: string;
+  userid: string;
+  eventid: string;
+}
