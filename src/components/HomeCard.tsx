@@ -1,16 +1,39 @@
+import NumberFlow from "@number-flow/react";
+
 interface HomeCardProps {
   value: string | number;
   description: string;
 }
 
 export function HomeCard({ value, description }: HomeCardProps) {
+  const numericValue =
+    typeof value === "string"
+      ? value.includes("%")
+        ? parseFloat(value)
+        : isNaN(Number(value))
+        ? 0
+        : Number(value)
+      : value;
+
   return (
     <div
       className="bg-[var(--light-green)] p-6 py-10
      rounded-lg shadow-sm border border-[var(--dark-green)]"
     >
       <p className="text-sm text-black font-semibold mt-2">{description}</p>
-      <h2 className="text-4xl font-bold text-[var(--dark-green)]">{value}</h2>
+      {typeof value === "string" && isNaN(Number(value.replace("%", ""))) ? (
+        <div className="text-4xl font-bold text-[var(--dark-green)]">
+          {value}
+        </div>
+      ) : (
+        <NumberFlow
+          className="text-4xl font-bold text-[var(--dark-green)]"
+          value={numericValue}
+          suffix={
+            typeof value === "string" && value.includes("%") ? "%" : undefined
+          }
+        />
+      )}
     </div>
   );
 }

@@ -89,6 +89,7 @@ const DropzoneContent = ({ className }: { className?: string }) => {
   } = useDropzoneContext();
 
   const exceedMaxFiles = files.length > maxFiles;
+  const isMultipleFilesAttempted = files.length > 1;
 
   const handleRemoveFile = useCallback(
     (fileName: string) => {
@@ -189,9 +190,7 @@ const DropzoneContent = ({ className }: { className?: string }) => {
       })}
       {exceedMaxFiles && (
         <p className="text-sm text-left mt-2 text-destructive">
-          You may upload only up to {maxFiles} files, please remove{" "}
-          {files.length - maxFiles} file
-          {files.length - maxFiles > 1 ? "s" : ""}.
+          You may upload only 1 file. Please remove {files.length - 1} file{files.length - 1 > 1 ? "s" : ""}.
         </p>
       )}
     </div>
@@ -209,8 +208,7 @@ const DropzoneEmptyState = ({ className }: { className?: string }) => {
     <div className={cn("flex flex-col items-center gap-y-2", className)}>
       <Upload size={20} className="text-muted-foreground" />
       <p className="text-sm">
-        Upload{!!maxFiles && maxFiles > 1 ? ` ${maxFiles}` : ""} file
-        {!maxFiles || maxFiles > 1 ? "s" : ""}
+        Upload a file
       </p>
       <div className="flex flex-col items-center gap-y-1">
         <p className="text-xs text-muted-foreground">
@@ -219,7 +217,7 @@ const DropzoneEmptyState = ({ className }: { className?: string }) => {
             onClick={() => inputRef.current?.click()}
             className="underline cursor-pointer transition hover:text-foreground"
           >
-            select csv
+            select a csv file
           </a>{" "}
           to upload
         </p>

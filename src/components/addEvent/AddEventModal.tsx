@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect } from "react";
 import FileUploadDemo from "../util/csvUpload";
 import { Loader2 } from "lucide-react";
-import supabase from "@/lib/supa/supa";
-import metaToCsv from "@/api/supaEdge/meta-csv";
-import { fetchCsvAttendees } from "@/api/supaEdge/main-csv";
-import { CsvMetaPayload } from "@/types/payloads";
-import { env } from "process";
+import { csvToMeta } from "@/api/supaEdge/meta-csv";
+import { csvToAttendees } from "@/api/supaEdge/main-csv";
+import { supabase } from "@/lib/supabase/client";
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -34,6 +32,24 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
     eventName: "",
     date: "",
   });
+
+  // Initialize with current date and time when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      // Format date and time for datetime-local input (YYYY-MM-DDThh:mm)
+      const localDatetime = new Date(
+        now.getTime() - now.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .slice(0, 16);
+
+      setFormData((prev) => ({
+        ...prev,
+        date: localDatetime,
+      }));
+    }
+  }, [isOpen]);
   const [hasUploadedFiles, setHasUploadedFiles] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,6 +64,13 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   });
 
   const isFormValid = formData.eventName.trim() !== "" && formData.date !== "";
+
+
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  };
 
   const hasUnsavedChanges = useCallback(() => {
     return (
@@ -69,6 +92,9 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
       date: "",
       eventName: "",
     }));
+    setSelectedFiles([]);
+    setHasUploadedFiles(false);
+    setUploadFn(null);
     setShowConfirmDialog(false);
     onClose();
   }, [onClose]);
@@ -100,25 +126,6 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
     setFeedback((prev) => ({ ...prev, show: false }));
   }, []);
 
-  const importTable = async (payload: CsvAttendeesPayload) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      throw new Error("No authentication token available - please log in");
-    }
-
-    const { data, error } = await supabase.functions.invoke("csv-attendees", {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: payload,
-    });
-
-    return { data, error };
-  };
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -133,71 +140,61 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
           throw new Error("User not authenticated");
         }
 
-        const folderPath = `${user.id}/${formData.eventName || "untitled"}`;
         await uploadFn(user.id);
 
-        const fileName = selectedFiles[0].name;
         const eventId = crypto.randomUUID();
-        const filePath = `${folderPath}/${fileName}`;
+        const filePath = `${user.id}/${selectedFiles[0].name}`;
 
-        // const response = await metaToCsv(
-        //   "csvs",
-        //   filePath,
-        //   user.id,
-        //   eventId,
-        //   formData.eventName,
-        //   formData.date
-        // );
+        // Ensure date is properly formatted with time preserved
+        const eventDate = formData.date ? new Date(formData.date) : new Date();
+        // Preserve the exact time selected by the user
+        const formattedDate = eventDate.toISOString();
 
-        const { data, error } = await importTable({
-          bucket: "csvs", // ✅ match your upload bucket
-          path: `${user.id}/${selectedFiles[0].name}`, // ✅ match your upload path
+        console.log("Submitting event with data:", {
+          bucket: "csvs",
+          path: filePath,
           userid: user.id,
           eventid: eventId,
+          eventname: formData.eventName,
+          eventdate: formattedDate,
         });
 
-        if (error) {
-          throw new Error(error.message);
+        const [csvMetadata, csvAttendeesData] = await Promise.all([
+          csvToMeta({
+            bucket: "csvs",
+            path: filePath,
+            userid: user.id,
+            eventid: eventId,
+            eventname: formData.eventName,
+            eventdate: formattedDate,
+          }),
+          csvToAttendees({
+            bucket: "csvs",
+            path: filePath,
+            userid: user.id,
+            eventid: eventId,
+          }),
+        ]);
+
+        const csvMetaerror = csvMetadata.error;
+        const csvAttendeesError = csvAttendeesData.error;
+
+        if (csvMetaerror || csvAttendeesError) {
+          throw new Error(csvMetaerror.message || csvAttendeesError.message);
         }
 
-        // try {
-        //   const csvResponse = await fetchCsvAttendees({
-        //     bucket: "csvs",
-        //     path: filePath,
-        //     userid: user.id,
-        //     eventid: eventId,
-        //   });
-
-        //   if (csvResponse.error) {
-        //     throw new Error(csvResponse.error || "Failed to process CSV");
-        //   }
-        // } catch (csvError) {
-        //   console.error("Error processing CSV:", csvError);
-        //   setFeedback({
-        //     show: true,
-        //     success: false,
-        //     message: "Error processing CSV",
-        //     details:
-        //       csvError instanceof Error ? csvError.message : String(csvError),
-        //   });
-        //   throw csvError;
-        // }
-
-        // if (response.error) {
-        //   setFeedback({
-        //     show: true,
-        //     success: false,
-        //     message: "Error creating event",
-        //     details: response.error,
-        //   });
-        //   throw new Error(response.error);
-        // }
+        console.log("Event created successfully:", {
+          eventId,
+          filePath,
+          csvMetadata,
+          csvAttendeesData,
+        });
 
         setFeedback({
           show: true,
           success: true,
           message: "Event created successfully",
-          details: `Event ID: ${eventId}, File: ${fileName}`,
+          details: `Event ID: ${eventId}, File: ${filePath}`,
         });
       } catch (error) {
         console.error("Error creating event:", error);
@@ -266,7 +263,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Date <span className="text-red-500">*</span>
+              Event Date & Time <span className="text-red-500">*</span>
             </label>
             <input
               type="datetime-local"
@@ -275,6 +272,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
+              step="60" /* Allow minute-level time selection */
             />
           </div>
 

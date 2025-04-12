@@ -59,18 +59,20 @@ export function Component({ data }: { data: ChartDataItem[] }) {
   };
 
   return (
-    <Card className="p-8">
+    <Card className="p-4 h-full">
       <CardHeader>
         <CardTitle>
           {data && data.length > 0 ? data[0].eventName : "Event Attendance"}
         </CardTitle>
         <CardDescription>Showing attendance vs reservations</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[calc(100%-140px)]">
+        <div className="h-full">
         <ChartContainer config={chartConfig}>
           <AreaChart
             accessibilityLayer
             data={data}
+            height={180}
             margin={{
               left: -20,
               right: 12,
@@ -109,6 +111,7 @@ export function Component({ data }: { data: ChartDataItem[] }) {
             />
           </AreaChart>
         </ChartContainer>
+        </div>
       </CardContent>
       <CardFooter>
         <div className="flex w-full items-start gap-2 text-sm">

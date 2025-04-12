@@ -58,16 +58,17 @@ export function Component({ data }: { data: ChartDataItem[] }) {
   };
 
   return (
-    <Card className="p-8">
+    <Card className="p-4 h-full">
       <CardHeader>
         <CardTitle>
           {data && data.length > 0 ? data[0].eventName : "Event Statistics"}
         </CardTitle>
         <CardDescription>Attendance vs Reservations</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[calc(100%-140px)]">
+        <div className="h-full">
         <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={data}>
+          <BarChart accessibilityLayer data={data} height={180}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -81,6 +82,7 @@ export function Component({ data }: { data: ChartDataItem[] }) {
             <Bar dataKey="Reservations" fill="var(--light-green)" radius={4} />
           </BarChart>
         </ChartContainer>
+        </div>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">

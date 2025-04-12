@@ -1,64 +1,57 @@
-import supabase from "@/lib/supa/supa";
+import { supabase } from "@/lib/supabase/client";
 import { CsvAttendeesPayload } from "@/types/payloads";
 
-
-
-export async function fetchCsvAttendees(params: CsvAttendeesPayload) {
-  const { bucket, path, userid, eventid } = params;
-
-  const payload: CsvAttendeesPayload = {
-    bucket,
-    path,
-    userid,
-    eventid,
-  };
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error("No authentication token available - please log in");
-  }
-
-  const url = "/api/supaEdge/api_routes/csv-attendees";
-
+export const csvToAttendees = async (payload: CsvAttendeesPayload) => {
   try {
-    console.log("Sending request to:", url);
-    console.log("Using params:", { bucket, path, userid, eventid });
+    console.log(
+      "csvToAttendees called with payload:",
+      JSON.stringify(payload, null, 2)
+    );
 
-    const response = await fetch(url, {
-      method: "POST",
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("No authentication token available - please log in");
+    }
+
+    console.log("Session token available, calling Edge Function");
+
+    // Verify all required fields are present
+    if (!payload.bucket) throw new Error("Missing 'bucket' field in payload");
+    if (!payload.path) throw new Error("Missing 'path' field in payload");
+    if (!payload.userid) throw new Error("Missing 'userid' field in payload");
+    if (!payload.eventid) throw new Error("Missing 'eventid' field in payload");
+
+    const { data, error } = await supabase.functions.invoke("csv-attendees", {
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify(payload),
+      body: payload,
     });
 
-    if (!response.ok) {
-      let errorDetail;
-      try {
-        errorDetail = await response.text();
-      } catch (e) {
-        errorDetail = "Could not extract error details";
-      }
+    console.log("Edge Function response:", { data, error });
 
-      throw new Error(
-        `HTTP error! Status: ${response.status}, Details: ${errorDetail}`
-      );
+    if (error) {
+      console.error("Edge Function returned an error:", error);
+      // Log more details about the error if available
+      if (error.message) console.error("Error message:", error.message);
+      if (error.status) console.error("Error status:", error.status);
+      if (error.details) console.error("Error details:", error.details);
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching CSV attendees:", error);
-
-    // Check if it's a network error
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      console.error(
-        "Network error - check your internet connection or if the Supabase function URL is correct"
-      );
-    }
-
-    throw error;
+    return { data, error };
+  } catch (err) {
+    console.error("Error in csvToAttendees function:", err);
+    return {
+      data: null,
+      error: {
+        message:
+          err instanceof Error
+            ? `Failed to send a request to the Edge Function: ${err.message}`
+            : "Failed to send a request to the Edge Function",
+      },
+    };
   }
-}
+};

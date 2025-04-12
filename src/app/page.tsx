@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useRouter } from "next/navigation";
-import supabase from "@/lib/supa/supa";
+import { supabase } from "@/lib/supabase/client";
 
 export default function Home() {
   const router = useRouter();
@@ -31,7 +31,11 @@ export default function Home() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={["google"]}
-          redirectTo={`${window.location.origin}/dashboard`}
+          redirectTo={
+            typeof window !== "undefined"
+              ? `${window.location.origin}/dashboard`
+              : ""
+          }
         />
       </div>
     </div>
