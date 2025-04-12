@@ -7,6 +7,11 @@ import { Loader2 } from "lucide-react";
 import { csvToMeta } from "@/api/supaEdge/meta-csv";
 import { csvToAttendees } from "@/api/supaEdge/main-csv";
 import { supabase } from "@/lib/supabase/client";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "react-toastify/dist/ReactToastify.css";
+import { sendErrorToast, sendSuccessToast } from "../toast/toast";
+import { useCsvMetaStore } from "@/store/csvMetaStore";
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -15,7 +20,7 @@ interface AddEventModalProps {
 
 interface FormData {
   eventName: string;
-  date: string;
+  date: Date | null;
   folderPath?: string;
   csvUrl?: string;
 }
@@ -30,26 +35,9 @@ interface FeedbackPopup {
 export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const [formData, setFormData] = useState<FormData>({
     eventName: "",
-    date: "",
+    date: null,
   });
 
-  // Initialize with current date and time when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const now = new Date();
-      // Format date and time for datetime-local input (YYYY-MM-DDThh:mm)
-      const localDatetime = new Date(
-        now.getTime() - now.getTimezoneOffset() * 60000
-      )
-        .toISOString()
-        .slice(0, 16);
-
-      setFormData((prev) => ({
-        ...prev,
-        date: localDatetime,
-      }));
-    }
-  }, [isOpen]);
   const [hasUploadedFiles, setHasUploadedFiles] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,18 +51,14 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
     message: "",
   });
 
-  const isFormValid = formData.eventName.trim() !== "" && formData.date !== "";
+  const { refreshCsvMeta } = useCsvMetaStore();
 
-
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
+  const isFormValid =
+    formData.eventName.trim() !== "" && formData.date !== null;
 
   const hasUnsavedChanges = useCallback(() => {
     return (
-      formData.eventName !== "" || formData.date !== "" || hasUploadedFiles
+      formData.eventName !== "" || formData.date !== null || hasUploadedFiles
     );
   }, [formData.eventName, formData.date, hasUploadedFiles]);
 
@@ -89,11 +73,12 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const handleConfirmClose = useCallback(() => {
     setFormData((prev) => ({
       ...prev,
-      date: "",
+      date: null,
       eventName: "",
     }));
     setSelectedFiles([]);
     setHasUploadedFiles(false);
+    setIsSubmitting(false);
     setUploadFn(null);
     setShowConfirmDialog(false);
     onClose();
@@ -110,6 +95,13 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
     []
   );
 
+  const handleDateChange = useCallback((date: Date | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      date: date,
+    }));
+  }, []);
+
   const handleFileChange = useCallback((hasFiles: boolean) => {
     setHasUploadedFiles(hasFiles);
   }, []);
@@ -122,11 +114,15 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
     []
   );
 
-  const closeFeedback = useCallback(() => {
-    setFeedback((prev) => ({ ...prev, show: false }));
-  }, []);
-
   const handleSubmit = useCallback(
+    /**
+     * Handles the form submission for adding a new event.
+     * - Prevents the default form submission behavior.
+     * - Validates user authentication and uploads files.
+     * - Generates a unique event ID and constructs the file path.
+     * - Submits event metadata and attendees data to server functions.
+     * - Displays success or error notifications based on the response.
+     */
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!uploadFn) return;
@@ -145,9 +141,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
         const eventId = crypto.randomUUID();
         const filePath = `${user.id}/${selectedFiles[0].name}`;
 
-        // Ensure date is properly formatted with time preserved
-        const eventDate = formData.date ? new Date(formData.date) : new Date();
-        // Preserve the exact time selected by the user
+        const eventDate = formData.date || new Date();
         const formattedDate = eventDate.toISOString();
 
         console.log("Submitting event with data:", {
@@ -180,6 +174,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
         const csvAttendeesError = csvAttendeesData.error;
 
         if (csvMetaerror || csvAttendeesError) {
+          sendErrorToast(csvMetaerror.message || csvAttendeesError.message);
           throw new Error(csvMetaerror.message || csvAttendeesError.message);
         }
 
@@ -190,43 +185,18 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
           csvAttendeesData,
         });
 
-        setFeedback({
-          show: true,
-          success: true,
-          message: "Event created successfully",
-          details: `Event ID: ${eventId}, File: ${filePath}`,
-        });
+        sendSuccessToast("Event created successfully");
+
+        handleConfirmClose();
+
+        await refreshCsvMeta();
       } catch (error) {
         console.error("Error creating event:", error);
-        if (!feedback.show) {
-          setFeedback({
-            show: true,
-            success: false,
-            message: "Error creating event",
-            details: error instanceof Error ? error.message : String(error),
-          });
-        }
-      } finally {
-        setIsSubmitting(false);
+        sendErrorToast(error.message);
       }
     },
-    [uploadFn, selectedFiles, formData, feedback.show]
+    [uploadFn, selectedFiles, formData, feedback.show, refreshCsvMeta]
   );
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    if (feedback.show && feedback.success) {
-      timeoutId = setTimeout(() => {
-        setFeedback((prev) => ({ ...prev, show: false }));
-        onClose();
-      }, 10000);
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [feedback.show, feedback.success, onClose]);
 
   if (!isOpen) return null;
 
@@ -261,19 +231,25 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
             />
           </div>
 
-          <div>
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700">
               Event Date & Time <span className="text-red-500">*</span>
             </label>
-            <input
-              type="datetime-local"
-              name="date"
-              value={formData.date}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-              step="60" /* Allow minute-level time selection */
-            />
+            <div className="mt-1 relative w-full">
+              <DatePicker
+                selected={formData.date}
+                onChange={handleDateChange}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                timeCaption="Time"
+                dateFormat="MMMM d, yyyy h:mm aa"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+                placeholderText="Select date and time"
+                wrapperClassName="w-full"
+              />
+            </div>
           </div>
 
           <div className="w-full">
@@ -336,98 +312,6 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 Close Anyway
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {feedback.show && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={closeFeedback}
-          />
-          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl transition-all duration-300">
-            <div className="flex items-center mb-4">
-              {feedback.success ? (
-                <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                  <svg
-                    className="h-6 w-6 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              ) : (
-                <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                  <svg
-                    className="h-6 w-6 text-red-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </div>
-              )}
-              <h3 className="text-lg font-medium text-gray-900">
-                {feedback.success ? "Success" : "Error"}
-              </h3>
-              <button
-                onClick={closeFeedback}
-                className="ml-auto text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mt-2">
-              <p className="text-sm font-medium text-gray-900 mb-2">
-                {feedback.message}
-              </p>
-              {feedback.details && (
-                <div className="mt-2 rounded-md bg-gray-50 p-4 text-sm text-gray-600 font-mono overflow-auto max-h-40 border border-gray-200">
-                  {feedback.details}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-5">
-              <Button
-                onClick={closeFeedback}
-                className={`w-full justify-center ${
-                  feedback.success
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-red-600 hover:bg-red-700 text-white"
-                }`}
-              >
-                {feedback.success ? "Done" : "Try Again"}
               </Button>
             </div>
           </div>

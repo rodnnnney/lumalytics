@@ -1,75 +1,39 @@
 "use client";
 
 import { HomeCard } from "@/components/HomeCard";
-import { Component as PieGraph } from "@/components/graphs/piegraph";
 import { Select } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChartDataItem, PieGraphDataItem } from "@/types/metaObj";
-import { Component as BarChart } from "@/components/graphs/BarChart";
+import { ChartDataItem } from "@/types/metaObj";
 import { Component as GradientChart } from "@/components/graphs/gradientChart";
-import { supabase } from "@/lib/supabase/client";
-import { fetchMeta } from "@/lib/supabase/queries/fetch";
+import { useCsvMetaStore } from "@/store/csvMetaStore";
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState("90d");
-  const [totalCheckIns, setTotalCheckIns] = useState(0);
-  const [checkInRate, setCheckInRate] = useState(0);
   const [returnRate, setReturnRate] = useState(0);
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
-  const [pieGraphData, setPieGraphData] = useState<PieGraphDataItem[]>([]);
-  const [numberEvents, setNumberEvents] = useState(0);
 
-  const getUser = async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error(error);
-    }
-    console.log("[INFO] - User data:", data.user?.id);
-    return data;
-  };
+  // Use the Zustand store to get CSV metadata
+  const {
+    totalCheckIns,
+    checkInRate,
+    numberEvents,
+    pieGraphData,
+    isLoading,
+    error,
+    fetchCsvMeta,
+    refreshCsvMeta,
+  } = useCsvMetaStore();
 
-  const fetchCsvMeta = async () => {
-    const { user } = await getUser();
-    if (user?.id) {
-      const fetch = await fetchMeta(user.id);
-      console.log("CSV Meta:", fetch);
-
-      setNumberEvents(fetch.length);
-
-      // Calculate total check-ins by looping through the CSV metadata
-      let totalCheckins = 0;
-      let totalRsvps = 0;
-
-      // Loop through each event and sum up the totalattendance
-      fetch.forEach((event) => {
-        totalCheckins += event.totalattendance || 0;
-        totalRsvps += event.totalrsvps || 0;
-      });
-
-      setTotalCheckIns(totalCheckins);
-
-      // Calculate check-in rate if there are any RSVPs
-      if (totalRsvps > 0) {
-        const rate = Math.round((totalCheckins / totalRsvps) * 100);
-        setCheckInRate(rate);
-      }
-
-      // Update pie graph data for check-ins vs reservations
-      setPieGraphData([
-        { label: "Check-ins", value: totalCheckins, fill: "#7195e8" },
-        {
-          label: "RSVPs",
-          value: totalRsvps,
-          fill: "#f27676",
-        },
-      ]);
-    }
-  };
 
   useEffect(() => {
-    fetchCsvMeta();
-  }, []);
+
+    const loadInitialData = async () => {
+      console.log("[Dashboard] Loading initial CSV metadata");
+      await fetchCsvMeta();
+    };
+    loadInitialData();
+  }, [fetchCsvMeta]);
 
   return (
     <div className="flex w-full flex-col ">
@@ -84,8 +48,14 @@ export default function Home() {
       </div>
 
       <div className="mb-6 flex justify-end">
-        <Button onClick={async () => fetchMeta((await getUser()).user?.id!)}>
-          Put All MetaData
+        <Button
+          onClick={async () => {
+            const updatedMetrics = await refreshCsvMeta();
+            console.log("Dashboard received updated metrics:", updatedMetrics);
+            // No need to force re-render with Zustand - it handles this automatically
+          }}
+        >
+          Refresh Metadata
         </Button>
       </div>
 
@@ -104,7 +74,6 @@ export default function Home() {
         <div>
           <GradientChart data={chartData} />
         </div>
-        
       </div>
     </div>
   );
