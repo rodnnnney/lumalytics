@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PieGraphDataItem } from '@/types/metaObj';
+import {ChartDataItem, PieGraphDataItem} from '@/types/metaObj';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { supabase } from '@/lib/supabase/client';
 
@@ -8,9 +8,10 @@ interface CsvMetaState {
   totalCheckIns: number;
   checkInRate: number;
   numberEvents: number;
-  pieGraphData: PieGraphDataItem[];
+  graphData: ChartDataItem[],
   isLoading: boolean;
   error: Error | null;
+  events: string[];
   
   // Actions
   fetchCsvMeta: () => Promise<any>;
@@ -23,7 +24,8 @@ export const useCsvMetaStore = create<CsvMetaState>((set, get) => ({
   totalCheckIns: 0,
   checkInRate: 0,
   numberEvents: 0,
-  pieGraphData: [],
+  graphData: [],
+  events: [],
   isLoading: false,
   error: null,
 
@@ -50,11 +52,25 @@ export const useCsvMetaStore = create<CsvMetaState>((set, get) => ({
         // Calculate total check-ins by looping through the CSV metadata
         let totalCheckins = 0;
         let totalRsvps = 0;
+        const eventNames :string[] = [];
+        const graph: ChartDataItem[] = [];
+
+        // date: string;
+        // Reservations: number;
+        // Attendees: number;
+        // eventName: string;
 
         // Loop through each event and sum up the totalattendance
         fetch.forEach((event) => {
+          eventNames.push(event.name);
           totalCheckins += event.totalattendance || 0;
           totalRsvps += event.totalrsvps || 0;
+          graph.push({
+            date: event.date,
+            Reservations: event.totalrsvps,
+            Attendees: event.totalattendance,
+            eventName: event.name,
+          });
         });
 
         // Calculate check-in rate if there are any RSVPs
@@ -64,21 +80,19 @@ export const useCsvMetaStore = create<CsvMetaState>((set, get) => ({
 
         // Update state with all the new values
         set({
+          events: eventNames,
           totalCheckIns: totalCheckins,
           checkInRate,
           numberEvents: fetch.length,
-          pieGraphData: [
-            { label: "Check-ins", value: totalCheckins, fill: "#7195e8" },
-            { label: "RSVPs", value: totalRsvps, fill: "#f27676" },
-          ],
+          graphData: graph,
           isLoading: false,
         });
 
         return {
           totalCheckins,
           totalRsvps,
-          events: fetch,
           checkInRate,
+          eventNames,
         };
       }
       

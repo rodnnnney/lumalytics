@@ -16,3 +16,14 @@ export interface PieGraphDataItem {
   trendingText?: string;
   footerText?: string;
 }
+
+// Interface for event data from Supabase
+export interface EventData {
+  id: string;
+  name: string;
+  totalattendance: number;
+  totalrsvps: number;
+  date?: string;
+  userid: string;
+  created_at?: string;
+}
