@@ -125,3 +125,57 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom animations for UI enhancement */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(79, 70, 229, 0.4);
+  }
+  50% {
+    border-color: rgba(79, 70, 229, 0.8);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s infinite ease-in-out;
+}
+
+/* Card hover effects */
+.card-hover-effect {
+  transition: all 0.3s ease;
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
