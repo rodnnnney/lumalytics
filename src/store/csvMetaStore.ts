@@ -2,13 +2,14 @@ import { create } from 'zustand';
 import {ChartDataItem, PieGraphDataItem} from '@/types/metaObj';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { supabase } from '@/lib/supabase/client';
+import {formatDateForChart, formatDateTime} from "@/util/format";
 
 // Define the store state interface
 interface CsvMetaState {
   totalCheckIns: number;
   checkInRate: number;
   numberEvents: number;
-  graphData: ChartDataItem[],
+  graphData: [],
   isLoading: boolean;
   error: Error | null;
   events: string[];
@@ -55,21 +56,16 @@ export const useCsvMetaStore = create<CsvMetaState>((set, get) => ({
         const eventNames :string[] = [];
         const graph: ChartDataItem[] = [];
 
-        // date: string;
-        // Reservations: number;
-        // Attendees: number;
-        // eventName: string;
-
         // Loop through each event and sum up the totalattendance
         fetch.forEach((event) => {
           eventNames.push(event.name);
           totalCheckins += event.totalattendance || 0;
           totalRsvps += event.totalrsvps || 0;
           graph.push({
-            date: event.date,
+            eventName: event['eventname'],
+            date: formatDateForChart(event['eventdate']),
             Reservations: event.totalrsvps,
             Attendees: event.totalattendance,
-            eventName: event.name,
           });
         });
 
@@ -93,6 +89,7 @@ export const useCsvMetaStore = create<CsvMetaState>((set, get) => ({
           totalRsvps,
           checkInRate,
           eventNames,
+          graph
         };
       }
       

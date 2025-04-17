@@ -4,33 +4,30 @@ import { HomeCard } from "@/components/HomeCard";
 import { Select } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChartDataItem, EventData } from "@/types/metaObj";
-import { Component as GradientChart } from "@/components/graphs/gradientChart";
 import { useCsvMetaStore } from "@/store/csvMetaStore";
 import { fetchMeta } from "@/lib/supabase/queries/fetch";
 import { supabase } from "@/lib/supabase/client";
-import {formatDateTime} from "@/components/util/format";
+import {formatDateForChart} from "@/util/format";
+import {Component as BarChart} from "@/components/graphs/barChart";
 import NumberFlow from "@number-flow/react";
+import {EventData} from "@/types/metaObj";
 
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState("90d");
   const [returnRate, setReturnRate] = useState(0);
-  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [eventData, setEventData] = useState<EventData[]>([]);
 
   const [sortField, setSortField] = useState("eventdate");
   const [sortDirection, setSortDirection] = useState("desc");
-
-
 
   // Use the Zustand store to get CSV metadata
   const {
     totalCheckIns,
     checkInRate,
     numberEvents,
-    events,
     isLoading,
+    graphData,
     error,
     fetchCsvMeta,
     refreshCsvMeta,
@@ -45,7 +42,6 @@ export default function Home() {
         setEventData(eventData);
       }
       await fetchCsvMeta();
-      console.log(`Events: ${events}`);
     };
     loadInitialData();
   }, [fetchCsvMeta]);
@@ -168,7 +164,7 @@ export default function Home() {
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 md:gap-6">
         <div>
-          <GradientChart data={chartData} />
+          <BarChart data={graphData} />
         </div>
 
         <div>
@@ -220,10 +216,10 @@ export default function Home() {
                     const rsvps = event.totalrsvps || 0;
                     const ratio = rsvps > 0 ? Math.round((checkIns / rsvps) * 100) : 0;
 
-                    return (
+                      return (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                         <td className="px-4 py-3 ">{index + 1} - {event['eventname']}</td>
-                        <td className="px-4 py-3 ">{formatDateTime(event['eventdate'])}</td>
+                        <td className="px-4 py-3 ">{formatDateForChart(event['eventdate'])}</td>
                         <td className="px-4 py-3 ">
                           <NumberFlow value={checkIns}/>
                         </td>

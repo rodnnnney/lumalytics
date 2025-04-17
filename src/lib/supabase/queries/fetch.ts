@@ -8,6 +8,29 @@ export const fetchMeta = async (userid: string) => {
   if (error) {
     throw error;
   }
-  console.log("[INFO] - Fetched meta data:", data);
+  return data;
+};
+
+export const fetchNames = async (userid: string) => {
+  const { data, error } = await supabase
+      .from("allMeta")
+      .select("eventname, eventdate, eventid, filepath")
+      .eq("userid", userid);
+  if (error) {
+    throw error;
+  }
+  return data;
+};
+
+export const fetchUsers = async ( userid: string ,eventid :string ) => {
+  const { data, error } = await supabase
+      .from("allAttendees")
+      .select("*")
+      .eq("userid", userid)
+      .eq("eventid", eventid);
+
+  if (error) {
+    throw error;
+  }
   return data;
 };

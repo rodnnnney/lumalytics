@@ -5,7 +5,7 @@ import {
   Dropzone,
   DropzoneContent,
   DropzoneEmptyState,
-} from "../addEvent/dropzone";
+} from "../components/addEvent/dropzone";
 import { useEffect } from "react";
 
 interface FileUploadDemoProps {

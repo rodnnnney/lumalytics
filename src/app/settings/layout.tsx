@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "/Users/rodneyshen/Desktop/rod/dashboardv1/src/app/globals.css";
 import Sidebar from "@/components/sidebar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -24,11 +14,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="flex min-h-screen bg-gray-100 font-[family-name:var(--font-geist-sans)]">
+      <div className="relative min-h-screen bg-gray-100">
         <Sidebar />
-        <main className="flex-1 p-6 pl-64">{children}</main>
-      </body>
-    </html>
+        <main className="pl-64 min-h-screen">
+          <div className="p-2">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              {children}
+            </div>
+          </div>
+        </main>
+      </div>
   );
 }
