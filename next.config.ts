@@ -1,5 +1,26 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  transpilePackages: [
+    'debug',
+    'supports-color',
+    'engine.io-client',
+    'socket.io-client',
+    'socket.io-parser',
+  ],
+  experimental: {
+    esmExternals: 'loose',
+  },
+  webpack: (config: { resolve: { fallback: any } }) => {
+    // Add a rule to handle ESM modules
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
 
-const nextConfig: NextConfig = {};
+    return config;
+  },
+};
 
-export default nextConfig;
+module.exports = nextConfig;

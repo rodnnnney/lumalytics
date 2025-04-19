@@ -1,7 +1,6 @@
 'use client';
 
 import AddEventButton from '@/components/addEvent/AddEventButton';
-import { PieChartComponent } from '@/components/PieChartComponent';
 import { supabase } from '@/lib/supabase/client';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
@@ -10,45 +9,10 @@ import { formatDateForChart } from '@/util/format';
 import { getReturningUsersCount } from '@/util/timeCompare';
 import { customUrlFormatter } from '@/util/urlspacer';
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-
-// Component for the Pie Chart
-function PieChartComponent({
-  returningCount,
-  newCount,
-}: {
-  returningCount: number;
-  newCount: number;
-}) {
-  const data = [
-    { name: 'Old', value: returningCount },
-    { name: 'New', value: newCount },
-  ];
-
-  const COLORS = ['#0088FE', '#00C49F'];
-
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          labelLine={true}
-          outerRadius={80}
-          fill="#8884d8"
-          dataKey="value"
-          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
-  );
-}
+import BasicPie from '@/components/graphs/SimplePie';
+import SimpleLineChart from '@/components/graphs/LineGraph';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
 
 export default function Past() {
   const [metaData, setMetaData] = useState<metadata[]>([]);
@@ -153,87 +117,196 @@ export default function Past() {
               </div>
             </div>
           ) : (
-            sortedMetaData.map(event => {
-              const eventUsers = getUsersForEvent(event.eventname);
+            <div>
+              <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 md:gap-6">
+                <div className="justify-self-center flex items-center w-full h-[30vh]">
+                  <SimpleLineChart
+                    series1Data={sortedMetaData.map(event => {
+                      const eventUsers = getUsersForEvent(event.eventname);
+                      return getReturningUsersCount(eventUsers, event.eventdate);
+                    })}
+                    series1Label="Returning Attendees"
+                    series2Data={sortedMetaData.map(event => {
+                      const eventUsers = getUsersForEvent(event.eventname);
+                      const returningUsersCount = getReturningUsersCount(
+                        eventUsers,
+                        event.eventdate
+                      );
+                      return eventUsers.length - returningUsersCount;
+                    })}
+                    series2Label="New Attendees"
+                    xLabels={sortedMetaData.map(event => event.eventname)}
+                    height={350}
+                  />
+                </div>
 
-              const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
+                <div className="justify-self-center flex items-center w-full h-[30vh]">
+                  <BasicPie
+                    data={[
+                      {
+                        id: 0,
+                        value: sortedMetaData.reduce((sum, event) => {
+                          const eventUsers = getUsersForEvent(event.eventname);
+                          return sum + getReturningUsersCount(eventUsers, event.eventdate);
+                        }, 0),
+                        label: 'Returning Attendees',
+                        color: '#f27676',
+                      },
+                      {
+                        id: 1,
+                        value: sortedMetaData.reduce((sum, event) => {
+                          const eventUsers = getUsersForEvent(event.eventname);
+                          const returningUsersCount = getReturningUsersCount(
+                            eventUsers,
+                            event.eventdate
+                          );
+                          return sum + (eventUsers.length - returningUsersCount);
+                        }, 0),
+                        label: 'New Attendees',
+                        color: '#7195e8',
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
 
-              const recurringAttendeesCount = eventUsers.length - returningUsersCount;
+              {sortedMetaData.map(event => {
+                const eventUsers = getUsersForEvent(event.eventname);
 
-              console.log(`${event.eventname}: ${returningUsersCount} returning users`);
+                const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
 
-              return (
-                <div key={event.id} className="mb-8 bg-gray-100 rounded-xl p-8">
-                  <div className="flex justify-between mb-4">
-                    <div className="py-2 px-4 rounded-lg flex items-baseline bg-gray-100">
-                      {event.eventname} - {formatDateForChart(event.eventdate)}
-                    </div>
-                    <div
-                      className="py-2 px-4 rounded-lg flex items-center gap-2 bg-gray-100 hover:bg-gray-200 cursor-pointer transition-colors"
-                      onClick={() => {
-                        const csvurl = customUrlFormatter(event.filepath.split('/'));
-                        window.open(csvurl, '_blank');
-                      }}
-                    >
-                      <span>Download CSV</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                interface FeedbackItem {
+                  rating: string;
+                  response: string;
+                  eventname: string;
+                }
 
-                  <div className="w-full">
-                    <div className="grid grid-cols-2 gap-4 w-full h-full">
-                      <div className="row-span-2 bg-blue-100 rounded-xl shadow-md px-6 py-4 w-full h-full flex flex-col">
-                        <h2 className="font-bold text-xl mb-4">Attendee Breakdown</h2>
-                        <p className="text-gray-700">Distribution of returning vs. new attendees</p>
-                        <div className="mt-4 flex-grow flex items-center justify-center">
-                          <PieChartComponent
-                            returningCount={returningUsersCount}
-                            newCount={recurringAttendeesCount}
-                          />
+                const eventFeedback = eventUsers.reduce<FeedbackItem[]>((feedbackList, user) => {
+                  if (user.all_feedback_structured && Array.isArray(user.all_feedback_structured)) {
+                    const feedbackArray = user.all_feedback_structured as FeedbackItem[];
+                    const eventSpecificFeedback = feedbackArray
+                      .filter(feedback => feedback.eventname === event.eventname)
+                      .map(feedback => ({
+                        ...feedback,
+                        userName:
+                          user.name ||
+                          `${user.first_name_guess || ''} ${user.last_name_guess || ''}`.trim() ||
+                          user.cleaned_email ||
+                          'Anonymous',
+                      }));
+                    return [...feedbackList, ...eventSpecificFeedback];
+                  }
+                  return feedbackList;
+                }, []);
+
+                const recurringAttendeesCount = eventUsers.length - returningUsersCount;
+
+                return (
+                  <div key={event.id}>
+                    <div className="mb-6 rounded-xl p-8 border border-gray-200">
+                      <div className="  ">
+                        <div className="flex justify-between ">
+                          <div className="inline-block w-fit bg-gradient-to-r from-luma-blue to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+                            {event.eventname}
+                          </div>
+
+                          <div className="relative group cursor-pointer">
+                            <div
+                              onClick={() => {
+                                const csvurl = customUrlFormatter(event.filepath.split('/'));
+                                window.open(csvurl, '_blank');
+                              }}
+                            >
+                              <div className="gap-2 transition-colors duration-300 ease-in-out hover:bg-gray-400 hover:text-white py-2 px-4 rounded">
+                                Download <FontAwesomeIcon icon={faDownload} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-500 mt-1">{formatDateForChart(event.eventdate)}</p>
+                      </div>
+
+                      <div className="w-full">
+                        <div className="grid grid-cols-2 gap-4 w-full h-full">
+                          <div className="row-span-2 rounded-xl shadow-sm px-6 py-4 w-full h-full flex flex-col">
+                            <h2 className="font-bold text-xl mb-4">Attendee Breakdown</h2>
+                            <div className="mt-4 flex-grow flex items-center justify-center">
+                              <BasicPie
+                                data={[
+                                  {
+                                    id: 0,
+                                    value: returningUsersCount,
+                                    label: 'Returning',
+                                    color: '#f27676',
+                                  },
+                                  {
+                                    id: 1,
+                                    value: recurringAttendeesCount,
+                                    label: 'New',
+                                    color: '#7195e8',
+                                  },
+                                ]}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
+                            <h2 className="font-bold text-xl mb-2">
+                              {event.totalattendance} - {event.totalrsvps}
+                            </h2>
+                            <p className="text-gray-700">Attendees vs RSVP</p>
+                          </div>
+
+                          <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
+                            <h2 className="font-bold text-xl mb-2">
+                              {returningUsersCount} - {recurringAttendeesCount}
+                            </h2>
+                            <p className="text-gray-700">Returning vs New</p>
+                          </div>
+
+                          <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
+                            <h2 className="font-bold text-xl mb-2">HI</h2>
+                            <p className="text-gray-700">Average checkin time</p>
+                          </div>
+
+                          <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
+                            <h2 className="font-bold text-xl mb-2">
+                              {eventFeedback.length > 0
+                                ? `${eventFeedback.length} ${eventFeedback.length === 1 ? 'Review' : 'Reviews'}`
+                                : 'No Reviews'}
+                            </h2>
+                            <p className="text-gray-700">Reviews and Responses</p>
+                            {eventFeedback.length > 0 && (
+                              <div className="mt-3 max-h-32 overflow-y-auto">
+                                {eventFeedback.map((feedback: FeedbackItem, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="mb-2 p-2 bg-gray-50 rounded-md relative group"
+                                  >
+                                    <div className="flex items-center mb-1">
+                                      <span className="text-yellow-500 mr-1">
+                                        {'★'.repeat(parseInt(feedback.rating) || 0)}
+                                      </span>
+                                      <span className="text-gray-400 text-sm">
+                                        ({feedback.rating}/5)
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-gray-700">
+                                      {feedback.response === '' ? '' : feedback.response}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-
-                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                        <h2 className="font-bold text-xl mb-2">
-                          {event.totalattendance} - {event.totalrsvps}
-                        </h2>
-                        <p className="text-gray-700">Attendees vs RSVP</p>
-                      </div>
-
-                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                        <h2 className="font-bold text-xl mb-2">
-                          {returningUsersCount} - {recurringAttendeesCount}
-                        </h2>
-                        <p className="text-gray-700">Returning vs New</p>
-                      </div>
-
-                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                        <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
-                        <p className="text-gray-700">Average checkin time</p>
-                      </div>
-
-                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                        <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
-                        <p className="text-gray-700">Reviews and Responses</p>
-                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

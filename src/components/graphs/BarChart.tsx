@@ -1,97 +1,62 @@
-"use client";
+import * as React from 'react';
+import { BarChart } from '@mui/x-charts/BarChart';
 
-import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { ChartDataItem } from "@/types/metaObj";
+interface CustomLabelsProps {
+  eventData?: any[];
+}
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-} from "@/components/ui/chart";
-
-const chartConfig = {
-  attendees: {
-    label: "Attendees",
-    color: "hsl(var(--dark-green))",
-  },
-  reservations: {
-    label: "Reservations",
-    color: "hsl(var(--light-green))",
-  },
-} satisfies ChartConfig;
-
-export function Component({ data }: { data: ChartDataItem[] }) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="rounded-lg border bg-background p-2 shadow-sm">
-          <div className="font-medium">
-            {payload[0]?.payload?.eventName || "Event"}
-          </div>
-          {payload.map((entry: any) => (
-            <div key={entry.name} className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: entry.color }}
-                />
-                <span className="text-sm text-muted-foreground">
-                  {entry.name}:
-                </span>
-              </div>
-              <span className="text-sm font-medium">{entry.value}</span>
-            </div>
-          ))}
-        </div>
-      );
+export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
+  const processedData = React.useMemo(() => {
+    if (!eventData || !eventData.length) {
+      return {
+        xLabels: ['No Data'],
+        checkIns: [0],
+        rsvps: [0],
+      };
     }
-    return null;
-  };
+
+    const recentEvents = [...eventData]
+      .sort((a, b) => {
+        const dateA = a.eventdate || a.date || '';
+        const dateB = b.eventdate || b.date || '';
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })
+      .slice(0, 5)
+      .reverse();
+
+    return {
+      xLabels: recentEvents.map(event => {
+        const name = event.eventname || event.name || '';
+        return name || 'Unnamed';
+      }),
+      checkIns: recentEvents.map(event => {
+        const attendance = event.totalattendance;
+        return typeof attendance === 'string' ? parseInt(attendance) || 0 : attendance || 0;
+      }),
+      rsvps: recentEvents.map(event => {
+        const rsvps = event.totalrsvps;
+        return typeof rsvps === 'string' ? parseInt(rsvps) || 0 : rsvps || 0;
+      }),
+    };
+  }, [eventData]);
 
   return (
-    <Card className="p-4 h-full">
-      <CardHeader>
-        <CardTitle>
-          {data && data.length > 0 ? data[0].eventName : "Event Statistics"}
-        </CardTitle>
-        <CardDescription>Attendance vs Reservations</CardDescription>
-      </CardHeader>
-      <CardContent className="h-[calc(100%-140px)]">
-        <div className="h-full">
-        <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={data} height={180}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => new Date(value).toLocaleDateString()}
-            />
-            <ChartTooltip cursor={false} content={<CustomTooltip />} />
-            <Bar dataKey="Attendees" fill="var(--dark-green)" radius={4} />
-            <Bar dataKey="Reservations" fill="var(--light-green)" radius={4} />
-          </BarChart>
-        </ChartContainer>
-        </div>
-      </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">
-          <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Event Attendance Overview
-        </div>
-      </CardFooter>
-    </Card>
+    <div className="p-4 bg-white rounded-lg shadow">
+      <h3 className="text-lg font-semibold mb-4">Event Attendance</h3>
+      <BarChart
+        xAxis={[{ scaleType: 'band', data: processedData.xLabels }]}
+        series={[
+          { data: processedData.checkIns, stack: 'A', label: 'Check-ins', color: '#f27676' },
+          { data: processedData.rsvps, stack: 'B', label: 'RSVPs', color: '#7195e8' },
+        ]}
+        barLabel={(item, context) => {
+          if ((item.value ?? 0) > 0) {
+            return item.value?.toString();
+          }
+          return null;
+        }}
+        height={350}
+      />
+    </div>
   );
 }

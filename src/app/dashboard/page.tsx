@@ -8,10 +8,13 @@ import { useCsvMetaStore } from '@/store/csvMetaStore';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { supabase } from '@/lib/supabase/client';
 import { formatDateForChart } from '@/util/format';
-import { Component as BarChart } from '@/components/graphs/barChart';
+import { getReturningUsersCount } from '@/util/timeCompare';
+import BasicPie from '@/components/graphs/SimplePie';
+
 import NumberFlow from '@number-flow/react';
-import { EventData } from '@/types/metaObj';
+import { EventData, metadata } from '@/types/metaObj';
 import AddEventButton from '@/components/addEvent/AddEventButton';
+import CustomLabels from '@/components/graphs/barChart';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
@@ -20,6 +23,8 @@ export default function Home() {
 
   const [sortField, setSortField] = useState('eventdate');
   const [sortDirection, setSortDirection] = useState('desc');
+
+  const [metaData, setMetaData] = useState<metadata[]>([]);
 
   // Use the Zustand store to get CSV metadata
   const {
@@ -56,9 +61,52 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) return;
+
+      const meta = await fetchMeta(data.user?.id);
+
+      setMetaData(
+        meta.map(event => ({
+          created_at: event.created_at,
+          eventdate: event.eventdate,
+          eventid: event.eventid,
+          eventname: event.eventname,
+          filepath: event.filepath,
+          id: event.id,
+          totalattendance: event.totalattendance,
+          totalrsvps: event.totalrsvps,
+          userid: event.userid,
+        }))
+      );
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('eventSortField', sortField);
     localStorage.setItem('eventSortDirection', sortDirection);
   }, [sortField, sortDirection]);
+
+  // Get users for a specific event
+  const getUsersForEvent = (eventName: string) => {
+    if (!eventData) return [];
+
+    // Filter the user data for the given event
+    const eventUsers = eventData
+      .filter(event => (event as any).eventname === eventName)
+      .flatMap(event => (event as any).useranalytics || []);
+
+    return eventUsers;
+  };
+
+  const sortMetaData = () => {
+    return [...metaData].sort((a, b) => {
+      return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
+    });
+  };
 
   const handleSortToggle = (field: string) => {
     console.log(`Sort Field: ${field}, Sort Direction: ${sortDirection}`);
@@ -158,7 +206,7 @@ export default function Home() {
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 md:gap-6">
         <div>
-          <BarChart data={graphData} />
+          <CustomLabels eventData={eventData} />
         </div>
 
         <div>

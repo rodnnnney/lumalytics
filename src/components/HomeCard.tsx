@@ -1,4 +1,4 @@
-import NumberFlow from "@number-flow/react";
+import NumberFlow from '@number-flow/react';
 
 interface HomeCardProps {
   value: string | number;
@@ -7,31 +7,27 @@ interface HomeCardProps {
 
 export function HomeCard({ value, description }: HomeCardProps) {
   const numericValue =
-    typeof value === "string"
-      ? value.includes("%")
+    typeof value === 'string'
+      ? value.includes('%')
         ? parseFloat(value)
         : isNaN(Number(value))
-        ? 0
-        : Number(value)
+          ? 0
+          : Number(value)
       : value;
 
   return (
     <div
-      className="bg-[var(--light-green)] p-6 py-10
-     rounded-lg shadow-sm border border-[var(--dark-green)]"
+      className="bg-luma-light-green p-6 py-10
+     rounded-lg shadow-sm border border-luma-dark-green"
     >
       <p className="text-sm text-black font-semibold mt-2">{description}</p>
-      {typeof value === "string" && isNaN(Number(value.replace("%", ""))) ? (
-        <div className="text-4xl font-bold text-[var(--dark-green)]">
-          {value}
-        </div>
+      {typeof value === 'string' && isNaN(Number(value.replace('%', ''))) ? (
+        <div className="text-4xl font-bold text-dark-green">{value}</div>
       ) : (
         <NumberFlow
-          className="text-4xl font-bold text-[var(--dark-green)]"
+          className="text-4xl font-bold text-[#5DAD6B]"
           value={numericValue}
-          suffix={
-            typeof value === "string" && value.includes("%") ? "%" : undefined
-          }
+          suffix={typeof value === 'string' && value.includes('%') ? '%' : undefined}
         />
       )}
     </div>
