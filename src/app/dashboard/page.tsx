@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { HomeCard } from "@/components/HomeCard";
-import { Select } from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useCsvMetaStore } from "@/store/csvMetaStore";
-import { fetchMeta } from "@/lib/supabase/queries/fetch";
-import { supabase } from "@/lib/supabase/client";
-import {formatDateForChart} from "@/util/format";
-import {Component as BarChart} from "@/components/graphs/barChart";
-import NumberFlow from "@number-flow/react";
-import {EventData} from "@/types/metaObj";
-
+import { HomeCard } from '@/components/HomeCard';
+import { Select } from '@/components/ui/select';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { useCsvMetaStore } from '@/store/csvMetaStore';
+import { fetchMeta } from '@/lib/supabase/queries/fetch';
+import { supabase } from '@/lib/supabase/client';
+import { formatDateForChart } from '@/util/format';
+import { Component as BarChart } from '@/components/graphs/barChart';
+import NumberFlow from '@number-flow/react';
+import { EventData } from '@/types/metaObj';
+import AddEventButton from '@/components/addEvent/AddEventButton';
 
 export default function Home() {
-  const [timeRange, setTimeRange] = useState("90d");
+  const [timeRange, setTimeRange] = useState('90d');
   const [returnRate, setReturnRate] = useState(0);
   const [eventData, setEventData] = useState<EventData[]>([]);
 
-  const [sortField, setSortField] = useState("eventdate");
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [sortField, setSortField] = useState('eventdate');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   // Use the Zustand store to get CSV metadata
   const {
@@ -28,14 +28,13 @@ export default function Home() {
     numberEvents,
     isLoading,
     graphData,
-    error,
     fetchCsvMeta,
     refreshCsvMeta,
   } = useCsvMetaStore();
 
   useEffect(() => {
     const loadInitialData = async () => {
-      console.log("[Dashboard] Loading initial CSV metadata");
+      console.log('[Dashboard] Loading initial CSV metadata');
       const { data } = await supabase.auth.getUser();
       if (data.user?.id) {
         const eventData = await fetchMeta(data.user.id);
@@ -53,7 +52,7 @@ export default function Home() {
     if (savedSortField) setSortField(savedSortField);
     if (savedSortDirection) setSortDirection(savedSortDirection);
 
-    console.log("[Dashboard] Saved sort field", savedSortField, savedSortDirection);
+    console.log('[Dashboard] Saved sort field', savedSortField, savedSortDirection);
   }, []);
 
   useEffect(() => {
@@ -74,26 +73,20 @@ export default function Home() {
   const renderSortIcon = (field: string) => {
     if (sortField !== field) return null;
 
-    return (
-        <span className="ml-1">
-      {sortDirection === 'asc' ? '↑' : '↓'}
-    </span>
-    );
+    return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
-
   const getSortedEventData = () => {
-    if(!Array.isArray(eventData) || eventData.length === 0) return [];
+    if (!Array.isArray(eventData) || eventData.length === 0) return [];
 
-    return [...eventData].sort((a,b)=>{
+    return [...eventData].sort((a, b) => {
       let valA, valB;
 
-      switch(sortField){
+      switch (sortField) {
         case 'eventname':
           valA = a['eventname'] || '';
           valB = b['eventname'] || '';
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-
 
         case 'eventdate':
           valA = new Date(a['eventdate'] || 0);
@@ -103,13 +96,13 @@ export default function Home() {
 
         case 'checkins':
           valA = a.totalattendance || 0;
-          valB =  b.totalattendance || 0;
+          valB = b.totalattendance || 0;
 
           return sortDirection === 'asc' ? valA - valB : valB - valA;
 
         case 'rsvps':
           valA = a.totalrsvps || 0;
-          valB =  b.totalrsvps || 0;
+          valB = b.totalrsvps || 0;
 
           return sortDirection === 'asc' ? valA - valB : valB - valA;
 
@@ -120,11 +113,10 @@ export default function Home() {
           return sortDirection === 'asc' ? valA - valB : valB - valA;
 
         default:
-            return 0;
+          return 0;
       }
-
     });
-  }
+  };
 
   const sortedEventData = getSortedEventData();
 
@@ -133,22 +125,24 @@ export default function Home() {
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-1">
           <p className="text-md font-semibold text-gray-600">Welcome home</p>
-          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-3xl font-bold text-transparent">
+          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
             Your overview
           </p>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}></Select>
       </div>
 
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex justify-end gap-4">
         <Button
           onClick={async () => {
             const updatedMetrics = await refreshCsvMeta();
-            console.log("Dashboard received updated metrics:", updatedMetrics);
+            console.log('Dashboard received updated metrics:', updatedMetrics);
           }}
         >
           Refresh Metadata
         </Button>
+
+        <AddEventButton />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
@@ -172,24 +166,34 @@ export default function Home() {
             <table className="min-w-full bg-white border border-gray-200 rounded-lg">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-600"
-                      onClick={() => handleSortToggle("eventname")}>
+                  <th
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    onClick={() => handleSortToggle('eventname')}
+                  >
                     Event Name {renderSortIcon('eventname')}
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-600"
-                    onClick={()=>handleSortToggle("eventdate")}>
+                  <th
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    onClick={() => handleSortToggle('eventdate')}
+                  >
                     Event Date {renderSortIcon('eventdate')}
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-600"
-                      onClick={()=>handleSortToggle("checkins")}>
+                  <th
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    onClick={() => handleSortToggle('checkins')}
+                  >
                     Check-ins {renderSortIcon('checkins')}
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-600"
-                      onClick={()=>handleSortToggle("rsvps")}>
+                  <th
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    onClick={() => handleSortToggle('rsvps')}
+                  >
                     RSVPs {renderSortIcon('rsvps')}
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-600"
-                  onClick={()=>handleSortToggle("ratio")}>
+                  <th
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    onClick={() => handleSortToggle('ratio')}
+                  >
                     Ratio {renderSortIcon('ratio')}
                   </th>
                 </tr>
@@ -204,37 +208,29 @@ export default function Home() {
                   </tr>
                 ) : eventData.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                      No events found
-                    </td>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500"></td>
                   </tr>
                 ) : (
-
-
-                    sortedEventData.map((event, index) => {
+                  sortedEventData.map((event, index) => {
                     const checkIns = event.totalattendance || 0;
                     const rsvps = event.totalrsvps || 0;
                     const ratio = rsvps > 0 ? Math.round((checkIns / rsvps) * 100) : 0;
 
-                      return (
+                    return (
                       <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="px-4 py-3 ">{index + 1} - {event['eventname']}</td>
+                        <td className="px-4 py-3 ">
+                          {index + 1} - {event['eventname']}
+                        </td>
                         <td className="px-4 py-3 ">{formatDateForChart(event['eventdate'])}</td>
                         <td className="px-4 py-3 ">
-                          <NumberFlow value={checkIns}/>
+                          <NumberFlow value={checkIns} />
                         </td>
                         <td className="px-4 py-3 ">
-                          <NumberFlow value={rsvps}/>
+                          <NumberFlow value={rsvps} />
                         </td>
                         <td className="px-4 py-3 ">
-                          <NumberFlow
-                              value={ratio}
-                              suffix={'%'}
-                          />
+                          <NumberFlow value={ratio} suffix={'%'} />
                         </td>
-
-
-
                       </tr>
                     );
                   })

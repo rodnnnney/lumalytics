@@ -1,5 +1,7 @@
 'use client';
 
+import AddEventButton from '@/components/addEvent/AddEventButton';
+import { PieChartComponent } from '@/components/PieChartComponent';
 import { supabase } from '@/lib/supabase/client';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
@@ -139,91 +141,100 @@ export default function Past() {
         <div className="flex flex-col gap-6 p-4">
           <div className="flex justify-between items-center w-full"></div>
 
-          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-3xl font-bold text-transparent mb-8">
+          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
             Past Events
           </p>
 
-          {sortedMetaData.map(event => {
-            const eventUsers = getUsersForEvent(event.eventname);
+          {sortedMetaData.length === 0 ? (
+            <div className="w-full h-[80vh] flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl text-gray-500 mb-6">No past events found</div>
+                <AddEventButton />
+              </div>
+            </div>
+          ) : (
+            sortedMetaData.map(event => {
+              const eventUsers = getUsersForEvent(event.eventname);
 
-            const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
+              const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
 
-            const recurringAttendeesCount = eventUsers.length - returningUsersCount;
+              const recurringAttendeesCount = eventUsers.length - returningUsersCount;
 
-            console.log(`${event.eventname}: ${returningUsersCount} returning users`);
+              console.log(`${event.eventname}: ${returningUsersCount} returning users`);
 
-            return (
-              <div key={event.id} className="mb-8 bg-gray-100 rounded-xl p-8">
-                <div className="flex justify-between mb-4">
-                  <div className="py-2 px-4 rounded-lg flex items-baseline bg-gray-100">
-                    {event.eventname} - {formatDateForChart(event.eventdate)}
-                  </div>
-                  <div
-                    className="py-2 px-4 rounded-lg flex items-center gap-2 bg-gray-100 hover:bg-gray-200 cursor-pointer transition-colors"
-                    onClick={() => {
-                      const csvurl = customUrlFormatter(event.filepath.split('/'));
-                      window.open(csvurl, '_blank');
-                    }}
-                  >
-                    <span>Download CSV</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+              return (
+                <div key={event.id} className="mb-8 bg-gray-100 rounded-xl p-8">
+                  <div className="flex justify-between mb-4">
+                    <div className="py-2 px-4 rounded-lg flex items-baseline bg-gray-100">
+                      {event.eventname} - {formatDateForChart(event.eventdate)}
+                    </div>
+                    <div
+                      className="py-2 px-4 rounded-lg flex items-center gap-2 bg-gray-100 hover:bg-gray-200 cursor-pointer transition-colors"
+                      onClick={() => {
+                        const csvurl = customUrlFormatter(event.filepath.split('/'));
+                        window.open(csvurl, '_blank');
+                      }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="w-full">
-                  <div className="grid grid-cols-2 gap-4 w-full h-full">
-                    <div className="row-span-2 bg-blue-100 rounded-xl shadow-md px-6 py-4 w-full h-full flex flex-col">
-                      <h2 className="font-bold text-xl mb-4">Attendee Breakdown</h2>
-                      <p className="text-gray-700">Distribution of returning vs. new attendees</p>
-                      <div className="mt-4 flex-grow flex items-center justify-center">
-                        <PieChartComponent
-                          returningCount={returningUsersCount}
-                          newCount={recurringAttendeesCount}
+                      <span>Download CSV</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                         />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <div className="grid grid-cols-2 gap-4 w-full h-full">
+                      <div className="row-span-2 bg-blue-100 rounded-xl shadow-md px-6 py-4 w-full h-full flex flex-col">
+                        <h2 className="font-bold text-xl mb-4">Attendee Breakdown</h2>
+                        <p className="text-gray-700">Distribution of returning vs. new attendees</p>
+                        <div className="mt-4 flex-grow flex items-center justify-center">
+                          <PieChartComponent
+                            returningCount={returningUsersCount}
+                            newCount={recurringAttendeesCount}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
+                        <h2 className="font-bold text-xl mb-2">
+                          {event.totalattendance} - {event.totalrsvps}
+                        </h2>
+                        <p className="text-gray-700">Attendees vs RSVP</p>
+                      </div>
+
+                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
+                        <h2 className="font-bold text-xl mb-2">
+                          {returningUsersCount} - {recurringAttendeesCount}
+                        </h2>
+                        <p className="text-gray-700">Returning vs New</p>
+                      </div>
+
+                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
+                        <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
+                        <p className="text-gray-700">Average checkin time</p>
+                      </div>
+
+                      <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
+                        <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
+                        <p className="text-gray-700">Reviews and Responses</p>
                       </div>
                     </div>
-
-                    <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                      <h2 className="font-bold text-xl mb-2">
-                        {event.totalattendance} - {event.totalrsvps}
-                      </h2>
-                      <p className="text-gray-700">Attendees vs RSVP</p>
-                    </div>
-
-                    <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                      <h2 className="font-bold text-xl mb-2">
-                        {returningUsersCount} - {recurringAttendeesCount}
-                      </h2>
-                      <p className="text-gray-700">Returning vs New</p>
-                    </div>
-
-                    <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                      <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
-                      <p className="text-gray-700">Average checkin time</p>
-                    </div>
-
-                    <div className="rounded-xl shadow-md px-6 py-4 w-full flex flex-col">
-                      <h2 className="font-bold text-xl mb-2">INFO HERE</h2>
-                      <p className="text-gray-700">Reviews and Responses</p>
-                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </div>

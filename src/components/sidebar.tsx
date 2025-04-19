@@ -1,23 +1,17 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  HomeIcon,
-  ChartBarIcon,
-  ClockIcon,
-  UsersIcon,
-  CogIcon,
-} from "@heroicons/react/24/outline";
-import { supabase } from "@/lib/supabase/client";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { HomeIcon, ChartBarIcon, ClockIcon, UsersIcon, CogIcon } from '@heroicons/react/24/outline';
+import { supabase } from '@/lib/supabase/client';
 
 const navItems = [
-  { name: "Home", href: "/dashboard", icon: HomeIcon },
-  { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
-  { name: "Past Events", href: "/past", icon: ClockIcon },
-  { name: "Attendees", href: "/users", icon: UsersIcon },
-  { name: "Settings", href: "/settings", icon: CogIcon },
+  { name: 'Home', href: '/dashboard', icon: HomeIcon },
+  // { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
+  { name: 'Past Events', href: '/past', icon: ClockIcon },
+  { name: 'Attendees', href: '/users', icon: UsersIcon },
+  { name: 'Settings', href: '/settings', icon: CogIcon },
 ];
 
 export default function Sidebar() {
@@ -31,7 +25,7 @@ export default function Sidebar() {
         </span>
       </div>
       <nav className="mt-8 px-2">
-        {navItems.map((item) => {
+        {navItems.map(item => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -39,15 +33,13 @@ export default function Sidebar() {
               href={item.href}
               className={`flex items-center px-4 py-3.5 my-1 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-gradient-to-r from-[#7195e8]/10 to-[#f27676]/10 text-gray-800 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                  ? 'bg-gradient-to-r from-[#7195e8]/10 to-[#f27676]/10 text-gray-800 shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
               }`}
             >
               <item.icon
                 className={`w-5 h-5 mr-3 transition-colors ${
-                  isActive
-                    ? "text-[#7195e8]"
-                    : "text-gray-400 group-hover:text-gray-500"
+                  isActive ? 'text-[#7195e8]' : 'text-gray-400 group-hover:text-gray-500'
                 }`}
               />
               <span>{item.name}</span>
@@ -61,9 +53,7 @@ export default function Sidebar() {
 
       <div className="absolute bottom-0 left-0 right-0 p-6">
         <div className="rounded-lg bg-gradient-to-r from-[#7195e8]/5 to-[#f27676]/5 p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-600 mb-2">
-            Dashboard Version
-          </p>
+          <p className="text-xs font-medium text-gray-600 mb-2">Dashboard Version</p>
           <p className="text-sm font-bold text-gray-800">v1.0</p>
         </div>
       </div>
