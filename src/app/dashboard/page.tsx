@@ -6,25 +6,41 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCsvMetaStore } from '@/store/csvMetaStore';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
+import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { supabase } from '@/lib/supabase/client';
 import { formatDateForChart } from '@/util/format';
 import { getReturningUsersCount } from '@/util/timeCompare';
 import BasicPie from '@/components/graphs/SimplePie';
 
 import NumberFlow from '@number-flow/react';
-import { EventData, metadata } from '@/types/metaObj';
+import { EventData, metadata, userObject } from '@/types/metaObj';
 import AddEventButton from '@/components/addEvent/AddEventButton';
 import CustomLabels from '@/components/graphs/barChart';
+import SimpleLineChart from '@/components/graphs/LineGraph';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
-  const [returnRate, setReturnRate] = useState(0);
+  const [returnRate, setReturnRate] = useState<string | null>(null);
   const [eventData, setEventData] = useState<EventData[]>([]);
 
   const [sortField, setSortField] = useState('eventdate');
   const [sortDirection, setSortDirection] = useState('desc');
 
   const [metaData, setMetaData] = useState<metadata[]>([]);
+
+  // NEW: userAnalytics state for unified user filtering
+  const [userAnalytics, setUserAnalytics] = useState<userObject[]>([]);
+
+  useEffect(() => {
+    const fetchUserAnalytics = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) return;
+      // fetchReoccuring returns the user analytics array
+      const users = await fetchReoccuring(data.user?.id);
+      setUserAnalytics(users);
+    };
+    fetchUserAnalytics();
+  }, []);
 
   // Use the Zustand store to get CSV metadata
   const {
@@ -81,26 +97,23 @@ export default function Home() {
           userid: event.userid,
         }))
       );
+
+      const returningUsers = userAnalytics.filter(
+        user => Number(user.total_events_checked_in) > 1
+      ).length;
+
+      const returnRateValue =
+        totalCheckIns > 0 ? ((returningUsers / totalCheckIns) * 100).toFixed(1) : '0';
+
+      setReturnRate(Number(returnRateValue));
     };
     fetchUser();
-  }, []);
+  }, [userAnalytics, totalCheckIns]);
 
   useEffect(() => {
     localStorage.setItem('eventSortField', sortField);
     localStorage.setItem('eventSortDirection', sortDirection);
   }, [sortField, sortDirection]);
-
-  // Get users for a specific event
-  const getUsersForEvent = (eventName: string) => {
-    if (!eventData) return [];
-
-    // Filter the user data for the given event
-    const eventUsers = eventData
-      .filter(event => (event as any).eventname === eventName)
-      .flatMap(event => (event as any).useranalytics || []);
-
-    return eventUsers;
-  };
 
   const sortMetaData = () => {
     return [...metaData].sort((a, b) => {
@@ -168,6 +181,9 @@ export default function Home() {
 
   const sortedEventData = getSortedEventData();
 
+  const sortedMetaData = sortMetaData();
+  console.log(`Sorted MetaData:`, sortedMetaData);
+
   return (
     <div className="flex w-full flex-col ">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -194,13 +210,36 @@ export default function Home() {
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
-        <HomeCard value={totalCheckIns} description="Total Check ins" />
-        <HomeCard value={numberEvents} description="Total Events" />
+        <HomeCard
+          value={totalCheckIns}
+          description="Total Check ins"
+          hoverInfo={[
+            ['Total Check-ins', totalCheckIns.toString()],
+            ['Total RSVPs', Math.floor((totalCheckIns / checkInRate) * 100).toString()],
+          ]}
+        />
+        <HomeCard
+          value={numberEvents}
+          description="Total Events"
+          hoverInfo={sortedEventData.map((event, index) => [
+            `Event ${index + 1}`,
+            event['eventname'],
+          ])}
+        />
         <HomeCard value={`${checkInRate}%`} description="Check-in Rate" />
         {numberEvents > 1 ? (
-          <HomeCard value={`${returnRate}%`} description="Return Rate" />
+          <HomeCard
+            value={`${returnRate}%`}
+            description="Return Rate"
+            hoverInfo={[
+              ['New', ((totalCheckIns * returnRate) / 100).toString()],
+              ['Total RSVPs', Math.floor((totalCheckIns / checkInRate) * 100).toString()],
+            ]}
+          />
         ) : (
-          <HomeCard value={`0%`} description="Return Rate" />
+          <>
+            <HomeCard value="0%" description="Return Rate" />
+          </>
         )}
       </div>
 
