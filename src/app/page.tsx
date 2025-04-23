@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { useEffect } from 'react';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
 
 export default function Home() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function Home() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        router.push("/dashboard");
+        router.push('/dashboard');
       }
     });
 
@@ -30,12 +30,8 @@ export default function Home() {
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
-          providers={["google"]}
-          redirectTo={
-            typeof window !== "undefined"
-              ? `${window.location.origin}/dashboard`
-              : ""
-          }
+          providers={['google']}
+          redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : ''}
         />
       </div>
     </div>

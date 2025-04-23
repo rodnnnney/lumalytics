@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import {ChartDataItem, PieGraphDataItem} from '@/types/metaObj';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { supabase } from '@/lib/supabase/client';
-import {formatDateForChart, formatDateTime} from "@/util/format";
+import {formatDateForChart, formatDateTime} from "@/utils/format";
 
 // Define the store state interface
 interface CsvMetaState {

@@ -8,8 +8,8 @@ import { useCsvMetaStore } from '@/store/csvMetaStore';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { supabase } from '@/lib/supabase/client';
-import { formatDateForChart } from '@/util/format';
-import { getReturningUsersCount } from '@/util/timeCompare';
+import { formatDateForChart } from '@/utils/format';
+import { getReturningUsersCount } from '@/utils/timeCompare';
 import BasicPie from '@/components/graphs/SimplePie';
 
 import NumberFlow from '@number-flow/react';
@@ -99,11 +99,11 @@ export default function Home() {
       );
 
       const returningUsers = userAnalytics.filter(
-        user => Number(user.total_events_checked_in) > 1
+        user => Number(user.total_events_checked_in) > 0
       ).length;
 
       const returnRateValue =
-        totalCheckIns > 0 ? ((returningUsers / totalCheckIns) * 100).toFixed(1) : '0';
+        totalCheckIns > 0 ? ((1 - returningUsers / totalCheckIns) * 100).toFixed(1) : '0';
 
       setReturnRate(Number(returnRateValue));
     };
@@ -232,8 +232,14 @@ export default function Home() {
             value={`${returnRate}%`}
             description="Return Rate"
             hoverInfo={[
-              ['New', ((totalCheckIns * returnRate) / 100).toString()],
-              ['Total RSVPs', Math.floor((totalCheckIns / checkInRate) * 100).toString()],
+              [
+                'Recurring (>1 event)',
+                Math.floor((returnRate / 100) * totalCheckIns).toString() || '0',
+              ],
+              [
+                'First Time Attendees',
+                totalCheckIns - Math.floor((returnRate / 100) * totalCheckIns).toString(),
+              ],
             ]}
           />
         ) : (

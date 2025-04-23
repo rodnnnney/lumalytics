@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useEffect } from "react";
-import FileUploadDemo from "@/util/csvUpload";
+import FileUploadDemo from "@/utils/csvUpload";
 import { Loader2 } from "lucide-react";
 import { csvToMeta } from "@/api/supaEdge/meta-csv";
 import { csvToAttendees } from "@/api/supaEdge/main-csv";
