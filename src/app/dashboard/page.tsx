@@ -16,6 +16,7 @@ import { EventData, metadata, userObject } from '@/types/metaObj';
 import AddEventButton from '@/components/addEvent/AddEventButton';
 import CustomLabels from '@/components/graphs/barChart';
 import SimpleLineChart from '@/components/graphs/LineGraph';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
@@ -26,6 +27,8 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState('desc');
 
   const [metaData, setMetaData] = useState<metadata[]>([]);
+
+  const router = useRouter();
 
   const [userAnalytics, setUserAnalytics] = useState<userObject[]>([]);
 
@@ -200,6 +203,14 @@ export default function Home() {
           }}
         >
           Refresh Metadata
+        </Button>
+
+        <Button
+          onClick={() => {
+            router.push('/upload');
+          }}
+        >
+          Upload
         </Button>
 
         <AddEventButton />
