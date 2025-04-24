@@ -10,7 +10,6 @@ import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { supabase } from '@/lib/supabase/client';
 import { formatDateForChart } from '@/utils/format';
 import { getReturningUsersCount } from '@/utils/timeCompare';
-import BasicPie from '@/components/graphs/SimplePie';
 
 import NumberFlow from '@number-flow/react';
 import { EventData, metadata, userObject } from '@/types/metaObj';
@@ -28,21 +27,18 @@ export default function Home() {
 
   const [metaData, setMetaData] = useState<metadata[]>([]);
 
-  // NEW: userAnalytics state for unified user filtering
   const [userAnalytics, setUserAnalytics] = useState<userObject[]>([]);
 
   useEffect(() => {
     const fetchUserAnalytics = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) return;
-      // fetchReoccuring returns the user analytics array
       const users = await fetchReoccuring(data.user?.id);
       setUserAnalytics(users);
     };
     fetchUserAnalytics();
   }, []);
 
-  // Use the Zustand store to get CSV metadata
   const {
     totalCheckIns,
     checkInRate,
