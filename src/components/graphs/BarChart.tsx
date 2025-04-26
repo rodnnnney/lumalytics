@@ -23,8 +23,6 @@ export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
       })
       .reverse();
 
-    console.log(`here ${recentEvents}`);
-
     return {
       xLabels: recentEvents.map(event => {
         const name = event.eventName || '';

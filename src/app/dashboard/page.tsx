@@ -2,7 +2,7 @@
 
 import { HomeCard } from '@/components/HomeCard';
 import { Select } from '@/components/ui/select';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
@@ -26,21 +26,13 @@ export default function Home() {
 
   const [sortField, setSortField] = useState('eventdate');
   const [sortDirection, setSortDirection] = useState('desc');
+  const isInitialMount = useRef(true);
 
   const [metaData, setMetaData] = useState<metadata[]>([]);
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, error: authError, loading: authLoading } = useAuth();
 
   const router = useRouter();
-
-  const [userAnalytics, setUserAnalytics] = useState<userObject[]>([]);
-
-  const fetchUserAnalytics = async () => {
-    if (!user) return;
-
-    const users = await fetchReoccuring(user?.id);
-    return users;
-  };
 
   interface CsvMetaData {
     totalCheckIns: number;
@@ -56,9 +48,9 @@ export default function Home() {
   }
 
   const fetchCsvMetaData = async (): Promise<CsvMetaData | null> => {
-    if (userError || !user) {
-      console.error('Error fetching user or user not found:', userError);
-      throw userError || new Error('User not found');
+    if (authError || !user) {
+      console.error('Error fetching user or user not found:', authError);
+      throw authError || new Error('User not found');
     }
 
     console.log('[INFO] - Fetching CSV Meta and User Analytics for User ID:', user.id);
@@ -69,9 +61,6 @@ export default function Home() {
           fetchMeta(user.id),
           fetchReoccuring(user.id),
         ]);
-
-        // console.log('Raw CSV Meta:', rawMetaData);
-        // console.log('Raw User Analytics:', userAnalyticsData);
 
         let totalCheckins = 0;
         let totalRsvps = 0;
@@ -126,10 +115,10 @@ export default function Home() {
           eventData: rawMetaData,
         };
 
-        console.log('[INFO] - Processed Combined MetaData:', processedData.eventData);
+        // console.log('[INFO] - Processed Combined MetaData:', processedData.eventData);
         return processedData;
       } catch (fetchError) {
-        console.error('Error fetching or processing data:', fetchError);
+        // console.error('Error fetching or processing data:', fetchError);
         throw fetchError instanceof Error ? fetchError : new Error(String(fetchError));
       }
     } else {
@@ -137,21 +126,6 @@ export default function Home() {
       return null;
     }
   };
-
-  const {
-    data: RecurringUsers,
-    error: userError,
-    isLoading: userAnalyticsLoading,
-  } = useQuery({
-    queryKey: ['userAnalytics', user?.id],
-    queryFn: fetchUserAnalytics,
-    staleTime: Infinity,
-    gcTime: 1 * 60 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    enabled: !!user,
-  });
 
   const {
     data,
@@ -172,30 +146,59 @@ export default function Home() {
     const savedSortField = localStorage.getItem('eventSortField');
     const savedSortDirection = localStorage.getItem('eventSortDirection');
 
+    console.log('[Dashboard Initial Load] Reading from localStorage:', {
+      savedSortField,
+      savedSortDirection,
+    });
+
     if (savedSortField) setSortField(savedSortField);
     if (savedSortDirection) setSortDirection(savedSortDirection);
 
-    console.log('[Dashboard] Saved sort field', savedSortField, savedSortDirection);
+    // Initial load completion will be marked in the writing effect
+    // console.log('[Dashboard Initial Load] State after potential localStorage update:', {
+    //  sortField,
+    //  sortDirection,
+    //});
   }, []);
 
+  // Write to localStorage on state change, *after* initial mount
   useEffect(() => {
-    localStorage.setItem('eventSortField', sortField);
-    localStorage.setItem('eventSortDirection', sortDirection);
-  }, [sortField, sortDirection]);
+    if (isInitialMount.current) {
+      // Mark initial mount as done after the first render completes
+      // and state potentially updated from localStorage is stable.
+      isInitialMount.current = false;
+    } else {
+      // Only write to localStorage on subsequent renders/state changes
+      console.log('[Dashboard State Change] Writing to localStorage:', {
+        sortField,
+        sortDirection,
+      });
+      localStorage.setItem('eventSortField', sortField);
+      localStorage.setItem('eventSortDirection', sortDirection);
+    }
+  }, [sortField, sortDirection]); // Still depends on the state variables
 
   const sortMetaData = () => {
-    return [...(RecurringUsers || [])].sort((a, b) => {
+    return [...(data?.userAnalytics || [])].sort((a, b) => {
       return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
     });
   };
 
   const handleSortToggle = (field: string) => {
-    console.log(`Sort Field: ${field}, Sort Direction: ${sortDirection}`);
+    console.log(`[Dashboard Sort Toggle] Clicked field: ${field}. Current state:`, {
+      sortField,
+      sortDirection,
+    });
     if (sortField === field) {
-      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortDirection(prev => {
+        const nextDirection = prev === 'asc' ? 'desc' : 'asc';
+        console.log(`[Dashboard Sort Toggle] Toggling direction for ${field} to: ${nextDirection}`);
+        return nextDirection;
+      });
     } else {
+      console.log(`[Dashboard Sort Toggle] Setting new field: ${field}, direction: desc`);
       setSortField(field);
-      setSortDirection('desc');
+      setSortDirection('desc'); // This will trigger the writing useEffect for both states if they change
     }
   };
 
@@ -213,15 +216,23 @@ export default function Home() {
 
       switch (sortField) {
         case 'eventname':
-          valA = a['eventname'] || '';
-          valB = b['eventname'] || '';
+          valA = a.eventname || '';
+          valB = b.eventname || '';
           return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
 
-        case 'eventdate':
-          valA = new Date(a['eventdate'] || 0);
-          valB = new Date(b['eventdate'] || 0);
+        case 'eventdate': {
+          const dateA = a.eventdate ? new Date(a.eventdate) : null;
+          const dateB = b.eventdate ? new Date(b.eventdate) : null;
 
-          return sortDirection === 'asc' ? valA - valB : valB - valA;
+          const timeA = dateA && !isNaN(dateA.getTime()) ? dateA.getTime() : null;
+          const timeB = dateB && !isNaN(dateB.getTime()) ? dateB.getTime() : null;
+
+          if (timeA === null && timeB === null) return 0;
+          if (timeA === null) return sortDirection === 'asc' ? 1 : -1;
+          if (timeB === null) return sortDirection === 'asc' ? -1 : 1;
+
+          return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+        }
 
         case 'checkins':
           valA = a.totalattendance || 0;
@@ -380,7 +391,6 @@ export default function Home() {
                   </tr>
                 ) : (
                   sortedEventData?.map((event, index) => {
-                    console.log(event);
                     const checkIns = event.totalattendance || 0;
                     const rsvps = event.totalrsvps || 0;
                     const ratio = rsvps && rsvps > 0 ? Math.round((checkIns / rsvps) * 100) : 0;

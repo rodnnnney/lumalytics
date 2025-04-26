@@ -13,73 +13,80 @@ import BasicPie from '@/components/graphs/SimplePie';
 import SimpleLineChart from '@/components/graphs/LineGraph';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '@/context/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+
+interface CsvMetaData {
+  userAnalytics: userObject[] | [];
+  metaData: metadata[] | [];
+}
 
 export default function Past() {
-  const [metaData, setMetaData] = useState<metadata[]>([]);
-  const [userAnalytics, setUserAnalytics] = useState<userObject[]>([]);
+  const { user, loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error) return;
-
-      const users = await fetchReoccuring(data.user?.id);
-
-      setUserAnalytics(
-        users.map(user => ({
-          all_custom_data: user.all_custom_data,
-          all_feedback_structured: user.all_feedback_structured,
-          average_rating: user.average_rating,
-          checked_in_event_names_array: user.checked_in_event_names_array,
-          checked_in_event_names_string: user.checked_in_event_names_string,
-          cleaned_email: user.cleaned_email,
-          count_events_approved_not_checked_in: user.count_events_approved_not_checked_in,
-          count_events_declined: user.count_events_declined,
-          count_events_invited: user.count_events_invited,
-          count_events_waitlisted: user.count_events_waitlisted,
-          created_at: user.created_at,
-          first_checkin_date: user.first_checkin_date,
-          first_name_guess: user.first_name_guess,
-          last_checkin_date: user.last_checkin_date,
-          last_name_guess: user.last_name_guess,
-          name: user.name,
-          total_events_checked_in: user.total_events_checked_in,
-          updated_at: user.updated_at,
-          userid: user.userid,
-        }))
-      );
+  const fetchUserAnalytics = async () => {
+    let csvMetaData: CsvMetaData = {
+      userAnalytics: [],
+      metaData: [],
     };
-    fetchUser();
-  }, []);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+    if (!user) return;
+    const [users, events] = await Promise.all([fetchReoccuring(user?.id), fetchMeta(user?.id)]);
 
-      if (error) return;
+    csvMetaData.userAnalytics = users.map(user => ({
+      all_custom_data: user.all_custom_data,
+      all_feedback_structured: user.all_feedback_structured,
+      average_rating: user.average_rating,
+      checked_in_event_names_array: user.checked_in_event_names_array,
+      checked_in_event_names_string: user.checked_in_event_names_string,
+      cleaned_email: user.cleaned_email,
+      count_events_approved_not_checked_in: user.count_events_approved_not_checked_in,
+      count_events_declined: user.count_events_declined,
+      count_events_invited: user.count_events_invited,
+      count_events_waitlisted: user.count_events_waitlisted,
+      created_at: user.created_at,
+      first_checkin_date: user.first_checkin_date,
+      first_name_guess: user.first_name_guess,
+      last_checkin_date: user.last_checkin_date,
+      last_name_guess: user.last_name_guess,
+      name: user.name,
+      total_events_checked_in: user.total_events_checked_in,
+      updated_at: user.updated_at,
+      userid: user.userid,
+    }));
 
-      const meta = await fetchMeta(data.user?.id);
+    csvMetaData.metaData = events.map(event => ({
+      created_at: event.created_at,
+      eventdate: event.eventdate,
+      eventid: event.eventid,
+      eventname: event.eventname,
+      filepath: event.filepath,
+      id: event.id,
+      totalattendance: event.totalattendance,
+      totalrsvps: event.totalrsvps,
+      userid: event.userid,
+    }));
 
-      setMetaData(
-        meta.map(event => ({
-          created_at: event.created_at,
-          eventdate: event.eventdate,
-          eventid: event.eventid,
-          eventname: event.eventname,
-          filepath: event.filepath,
-          id: event.id,
-          totalattendance: event.totalattendance,
-          totalrsvps: event.totalrsvps,
-          userid: event.userid,
-        }))
-      );
-    };
-    fetchUser();
-  }, []);
+    return csvMetaData;
+  };
+
+  const {
+    data,
+    error,
+    isLoading: isQueryLoading,
+  } = useQuery({
+    queryKey: ['userAnalytics', user?.id],
+    queryFn: fetchUserAnalytics,
+    staleTime: Infinity,
+    gcTime: 1 * 60 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    enabled: !!user,
+  });
 
   const sortMetaData = () => {
-    return [...metaData].sort((a, b) => {
+    return [...(data?.metaData || [])].sort((a, b) => {
       return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
     });
   };
@@ -87,7 +94,7 @@ export default function Past() {
   const sortedMetaData = sortMetaData();
 
   const getUsersForEvent = (eventName: string) => {
-    return userAnalytics.filter(user => {
+    return data?.userAnalytics.filter(user => {
       if (
         !user ||
         !user.checked_in_event_names_array ||
@@ -109,7 +116,15 @@ export default function Past() {
             Past Events
           </p>
 
-          {sortedMetaData.length === 0 ? (
+          {isQueryLoading || authLoading ? (
+            <div className="w-full h-[80vh] flex items-center justify-center">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <></>
+          )}
+
+          {data?.userAnalytics?.length === 0 && !(isQueryLoading || authLoading) ? (
             <div className="w-full h-[80vh] flex items-center justify-center">
               <div className="text-center">
                 <div className="text-2xl text-gray-500 mb-6">No past events found</div>
@@ -123,16 +138,16 @@ export default function Past() {
                   <SimpleLineChart
                     series1Data={sortedMetaData.map(event => {
                       const eventUsers = getUsersForEvent(event.eventname);
-                      return getReturningUsersCount(eventUsers, event.eventdate);
+                      return getReturningUsersCount(eventUsers || [], event.eventdate);
                     })}
                     series1Label="Returning Attendees"
                     series2Data={sortedMetaData.map(event => {
                       const eventUsers = getUsersForEvent(event.eventname);
                       const returningUsersCount = getReturningUsersCount(
-                        eventUsers,
+                        eventUsers || [],
                         event.eventdate
                       );
-                      return eventUsers.length - returningUsersCount;
+                      return (eventUsers?.length || 0) - returningUsersCount;
                     })}
                     series2Label="New Attendees"
                     xLabels={sortedMetaData.map(event => event.eventname)}
@@ -147,7 +162,7 @@ export default function Past() {
                         id: 0,
                         value: sortedMetaData.reduce((sum, event) => {
                           const eventUsers = getUsersForEvent(event.eventname);
-                          return sum + getReturningUsersCount(eventUsers, event.eventdate);
+                          return sum + getReturningUsersCount(eventUsers || [], event.eventdate);
                         }, 0),
                         label: 'Returning Attendees',
                         color: '#f27676',
@@ -157,10 +172,10 @@ export default function Past() {
                         value: sortedMetaData.reduce((sum, event) => {
                           const eventUsers = getUsersForEvent(event.eventname);
                           const returningUsersCount = getReturningUsersCount(
-                            eventUsers,
+                            eventUsers || [],
                             event.eventdate
                           );
-                          return sum + (eventUsers.length - returningUsersCount);
+                          return sum + ((eventUsers?.length || 0) - returningUsersCount);
                         }, 0),
                         label: 'New Attendees',
                         color: '#7195e8',
@@ -171,7 +186,7 @@ export default function Past() {
               </div>
 
               {sortedMetaData.map(event => {
-                const eventUsers = getUsersForEvent(event.eventname);
+                const eventUsers = getUsersForEvent(event.eventname) || [];
 
                 const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
 

@@ -3,13 +3,14 @@
 import { userObject } from '@/types/metaObj';
 import NumberFlow from '@number-flow/react';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Users() {
   const [sortField, setSortField] = useState('alpha');
   const [sortDirection, setSortDirection] = useState('desc');
+  const isInitialMount = useRef(true);
   const { user, loading: authLoading } = useAuth();
 
   const fetchAllUsers = async (): Promise<userObject[]> => {
@@ -66,10 +67,51 @@ export default function Users() {
     enabled: !!user && !authLoading,
   });
 
+  useEffect(() => {
+    const savedSortField = localStorage.getItem('userSortField');
+    const savedSortDirection = localStorage.getItem('userSortDirection');
+
+    console.log('[Users Initial Load] Reading from localStorage:', {
+      savedSortField,
+      savedSortDirection,
+    });
+
+    if (savedSortField) setSortField(savedSortField);
+    if (savedSortDirection) setSortDirection(savedSortDirection);
+  }, []);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      console.log('[Users State Change] Writing to localStorage:', { sortField, sortDirection });
+      localStorage.setItem('userSortField', sortField);
+      localStorage.setItem('userSortDirection', sortDirection);
+    }
+  }, [sortField, sortDirection]);
+
   const renderSortIcon = (field: string) => {
     if (sortField !== field) return null;
 
     return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  const handleSortToggle = (field: string) => {
+    console.log(`[Users Sort Toggle] Clicked field: ${field}. Current state:`, {
+      sortField,
+      sortDirection,
+    });
+    if (sortField === field) {
+      setSortDirection(prev => {
+        const nextDirection = prev === 'asc' ? 'desc' : 'asc';
+        console.log(`[Users Sort Toggle] Toggling direction for ${field} to: ${nextDirection}`);
+        return nextDirection;
+      });
+    } else {
+      console.log(`[Users Sort Toggle] Setting new field: ${field}, direction: desc`);
+      setSortField(field);
+      setSortDirection('desc');
+    }
   };
 
   const getSortedEventData = () => {
@@ -108,96 +150,101 @@ export default function Users() {
     });
   };
 
-  const handleSortToggle = (field: string) => {
-    console.log(`Sort Field: ${field}, Sort Direction: ${sortDirection}`);
-    if (sortField === field) {
-      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
-
-  const sortedUserAnalytics = getSortedEventData();
+  const sortedUserAnalytics = useMemo(() => {
+    return getSortedEventData();
+  }, [data, sortField, sortDirection]);
 
   return (
     <div>
       <p className="p-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
         Attendees
       </p>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
 
-              <th
-                className="px-4 py-3 text-left font-medium text-gray-700"
-                onClick={() => handleSortToggle('alpha')}
-              >
-                Name
-                {renderSortIcon('alpha')}
-              </th>
-              <th
-                className="px-4 py-3 text-left font-medium text-gray-700"
-                onClick={() => handleSortToggle('email')}
-              >
-                Email
-                {renderSortIcon('email')}
-              </th>
-              <th
-                className="px-4 py-3 text-left font-medium text-gray-700"
-                onClick={() => handleSortToggle('events_check_in')}
-              >
-                Events Checked In
-                {renderSortIcon('events_check_in')}
-              </th>
-              <th
-                className="px-4 py-3 text-left font-medium text-gray-700"
-                onClick={() => handleSortToggle('events_approved')}
-              >
-                Events Approved
-                {renderSortIcon('events_approved')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
+      {isLoading ? (
+        <div className="w-full h-[80vh] flex items-center justify-center">
+          <div className="loader"></div>
+        </div>
+      ) : (
+        <></>
+      )}
+
+      {isLoading ? (
+        <></>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+            <thead className="bg-gray-100">
               <tr>
-                <td colSpan={5} className="px-4 py-3 text-center">
-                  Loading...
-                </td>
+                <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
+
+                <th
+                  className="px-4 py-3 text-left font-medium text-gray-700"
+                  onClick={() => handleSortToggle('alpha')}
+                >
+                  Name
+                  {renderSortIcon('alpha')}
+                </th>
+                <th
+                  className="px-4 py-3 text-left font-medium text-gray-700"
+                  onClick={() => handleSortToggle('email')}
+                >
+                  Email
+                  {renderSortIcon('email')}
+                </th>
+                <th
+                  className="px-4 py-3 text-left font-medium text-gray-700"
+                  onClick={() => handleSortToggle('events_check_in')}
+                >
+                  Events Checked In
+                  {renderSortIcon('events_check_in')}
+                </th>
+                <th
+                  className="px-4 py-3 text-left font-medium text-gray-700"
+                  onClick={() => handleSortToggle('events_approved')}
+                >
+                  Events Approved
+                  {renderSortIcon('events_approved')}
+                </th>
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-3 text-center">
-                  Error loading data
-                </td>
-              </tr>
-            ) : !data || data.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-3 text-center">
-                  No users found
-                </td>
-              </tr>
-            ) : (
-              getSortedEventData().map((user, index) => (
-                <tr key={user.cleaned_email} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{index + 1}</td>
-                  <td className="px-4 py-3 font-medium">{user.name}</td>
-                  <td className="px-4 py-3">{user.cleaned_email}</td>
-                  <td className="px-4 py-3">
-                    <NumberFlow value={Number(user.total_events_checked_in)} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <NumberFlow value={Number(user.count_events_approved_not_checked_in)} />
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-3 text-center">
+                    Loading...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-3 text-center">
+                    Error loading data
+                  </td>
+                </tr>
+              ) : !data || data.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-3 text-center">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                sortedUserAnalytics.map((user, index) => (
+                  <tr key={user.cleaned_email} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium">{index + 1}</td>
+                    <td className="px-4 py-3 font-medium">{user.name}</td>
+                    <td className="px-4 py-3">{user.cleaned_email}</td>
+                    <td className="px-4 py-3">
+                      <NumberFlow value={Number(user.total_events_checked_in)} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <NumberFlow value={Number(user.count_events_approved_not_checked_in)} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

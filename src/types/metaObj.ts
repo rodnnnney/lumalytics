@@ -20,10 +20,10 @@ export interface PieGraphDataItem {
 // Interface for event data from Supabase
 export interface EventData {
   id: string;
-  name: string;
+  eventname: string;
   totalattendance: number;
   totalrsvps: number;
-  date?: string;
+  eventdate: string;
   userid: string;
   created_at?: string;
 }
