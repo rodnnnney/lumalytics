@@ -60,12 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // Redirect if user is logged in and loading is complete
-  useEffect(() => {
-    if (!loading && user) {
-      console.log('[AuthContext] User logged in, redirecting to /');
-      router.push('/');
-    }
-  }, [user, loading, router]);
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     console.log('[AuthContext] User logged in, redirecting to /');
+  //     router.push('/');
+  //   }
+  // }, [user, loading, router]);
 
   const value = { user, loading, error };
 
