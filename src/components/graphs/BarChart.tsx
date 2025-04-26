@@ -21,20 +21,21 @@ export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
         const dateB = b.eventdate || b.date || '';
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })
-      .slice(0, 5)
       .reverse();
+
+    console.log(`here ${recentEvents}`);
 
     return {
       xLabels: recentEvents.map(event => {
-        const name = event.eventname || event.name || '';
+        const name = event.eventName || '';
         return name || 'Unnamed';
       }),
       checkIns: recentEvents.map(event => {
-        const attendance = event.totalattendance;
+        const attendance = event.Attendees;
         return typeof attendance === 'string' ? parseInt(attendance) || 0 : attendance || 0;
       }),
       rsvps: recentEvents.map(event => {
-        const rsvps = event.totalrsvps;
+        const rsvps = event.Reservations;
         return typeof rsvps === 'string' ? parseInt(rsvps) || 0 : rsvps || 0;
       }),
     };
@@ -46,15 +47,9 @@ export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
       <BarChart
         xAxis={[{ scaleType: 'band', data: processedData.xLabels }]}
         series={[
-          { data: processedData.checkIns, stack: 'A', label: 'Check-ins', color: '#f27676' },
-          { data: processedData.rsvps, stack: 'B', label: 'RSVPs', color: '#7195e8' },
+          { data: processedData.checkIns, label: 'Check-ins', color: '#f27676' },
+          { data: processedData.rsvps, label: 'RSVPs', color: '#7195e8' },
         ]}
-        barLabel={(item, context) => {
-          if ((item.value ?? 0) > 0) {
-            return item.value?.toString();
-          }
-          return null;
-        }}
         height={350}
       />
     </div>

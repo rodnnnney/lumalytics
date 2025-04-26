@@ -3,162 +3,122 @@
 import { userObject } from '@/types/metaObj';
 import NumberFlow from '@number-flow/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
+import { useState } from 'react';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Users() {
   const [sortField, setSortField] = useState('alpha');
   const [sortDirection, setSortDirection] = useState('desc');
-  const [user, setUser] = useState<User | null>(null);
-  const [userLoading, setUserLoading] = useState(true);
-
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     const { data, error } = await supabase.auth.getUser();
-
-  //     if (error) return;
-
-  //     const users = await fetchReoccuring(data.user?.id);
-
-  //     setUserAnalytics(
-  //     users.map(user => ({
-  //       all_custom_data: user.all_custom_data,
-  //       all_feedback_structured: user.all_feedback_structured,
-  //       average_rating: user.average_rating,
-  //       checked_in_event_names_array: user.checked_in_event_names_array,
-  //       checked_in_event_names_string: user.checked_in_event_names_string,
-  //       cleaned_email: user.cleaned_email,
-  //       count_events_approved_not_checked_in: user.count_events_approved_not_checked_in,
-  //       count_events_declined: user.count_events_declined,
-  //       count_events_invited: user.count_events_invited,
-  //       count_events_waitlisted: user.count_events_waitlisted,
-  //       created_at: user.created_at,
-  //       first_checkin_date: user.first_checkin_date,
-  //       first_name_guess: user.first_name_guess,
-  //       last_checkin_date: user.last_checkin_date,
-  //       last_name_guess: user.last_name_guess,
-  //       name: user.name,
-  //       total_events_checked_in: user.total_events_checked_in,
-  //       updated_at: user.updated_at,
-  //       userid: user.userid,
+  const { user, loading: authLoading } = useAuth();
 
   const fetchAllUsers = async (): Promise<userObject[]> => {
-    const { user } = await supabase.auth.getUser();
-    console.log('Auth data:', user);
-
-    const { data } = await fetchReoccuring(user.user.id || 'Hello');
-    if (error) {
-      console.error('Error fetching users:', error);
+    if (!user) {
+      console.log('[fetchAllUsers] User context not ready.');
       return [];
     }
 
-    console.log('Fetched users:', data);
+    console.log('[fetchAllUsers] Starting fetch for user ID:', user.id);
 
-    return data.map(user => ({
-      all_custom_data: user.all_custom_data,
-      all_feedback_structured: user.all_feedback_structured,
-      average_rating: user.average_rating,
-      checked_in_event_names_array: user.checked_in_event_names_array,
-      checked_in_event_names_string: user.checked_in_event_names_string,
-      cleaned_email: user.cleaned_email,
-      count_events_approved_not_checked_in: user.count_events_approved_not_checked_in,
-      count_events_declined: user.count_events_declined,
-      count_events_invited: user.count_events_invited,
-      count_events_waitlisted: user.count_events_waitlisted,
-      created_at: user.created_at,
-      first_checkin_date: user.first_checkin_date,
-      first_name_guess: user.first_name_guess,
-      last_checkin_date: user.last_checkin_date,
-      last_name_guess: user.last_name_guess,
-      name: user.name,
-      total_events_checked_in: user.total_events_checked_in,
-      updated_at: user.updated_at,
-      userid: user.userid,
-    }));
+    try {
+      const usersData = await fetchReoccuring(user.id);
+
+      if (!usersData) {
+        console.log('No user data returned.');
+        return [];
+      }
+
+      return usersData.map((userData: userObject) => ({
+        all_custom_data: userData.all_custom_data,
+        all_feedback_structured: userData.all_feedback_structured,
+        average_rating: userData.average_rating,
+        checked_in_event_names_array: userData.checked_in_event_names_array,
+        checked_in_event_names_string: userData.checked_in_event_names_string,
+        cleaned_email: userData.cleaned_email,
+        count_events_approved_not_checked_in: userData.count_events_approved_not_checked_in,
+        count_events_declined: userData.count_events_declined,
+        count_events_invited: userData.count_events_invited,
+        count_events_waitlisted: userData.count_events_waitlisted,
+        created_at: userData.created_at,
+        first_checkin_date: userData.first_checkin_date,
+        first_name_guess: userData.first_name_guess,
+        last_checkin_date: userData.last_checkin_date,
+        last_name_guess: userData.last_name_guess,
+        name: userData.name,
+        total_events_checked_in: userData.total_events_checked_in,
+        updated_at: userData.updated_at,
+        userid: userData.userid,
+      }));
+    } catch (fetchError) {
+      console.error('Error fetching reoccurring users:', fetchError);
+      throw fetchError;
+    }
   };
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', user?.id],
     queryFn: fetchAllUsers,
-    staleTime: Infinity, // Keep data fresh forever until manually invalidated
-    gcTime: 1 * 60 * 60 * 1000, // Store in cache for 1 hours
+    staleTime: Infinity,
+    gcTime: 1 * 60 * 60 * 1000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    enabled: !userLoading, // Enable the query once we know auth state (whether user is logged in or not)
+    enabled: !!user && !authLoading,
   });
 
-  // useEffect(() => {
-  //   const savedSortField = localStorage.getItem('eventSortFieldUsers');
-  //   const savedSortDirection = localStorage.getItem('eventSortDirectionUsers');
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return null;
 
-  //   if (savedSortField) setSortField(savedSortField);
-  //   if (savedSortDirection) setSortDirection(savedSortDirection);
+    return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  };
 
-  //   console.log('[Users] Saved sort field', savedSortField, savedSortDirection);
-  // }, []);
+  const getSortedEventData = () => {
+    if (!Array.isArray(data) || data.length === 0) return [];
 
-  // useEffect(() => {
-  //   localStorage.setItem('eventSortFieldUsers', sortField);
-  //   localStorage.setItem('eventSortDirectionUsers', sortDirection);
-  //   console.log('[Users] Saving sort preferences', sortField, sortDirection);
-  // }, [sortField, sortDirection]);
+    return [...data].sort((a, b) => {
+      let valA, valB;
 
-  // const renderSortIcon = (field: string) => {
-  //   if (sortField !== field) return null;
+      switch (sortField) {
+        case 'events_check_in':
+          valA = Number(a.total_events_checked_in) || 0;
+          valB = Number(b.total_events_checked_in) || 0;
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
 
-  //   return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
-  // };
+        case 'events_approved':
+          valA = Number(a.count_events_approved_not_checked_in) || 0;
+          valB = Number(b.count_events_approved_not_checked_in) || 0;
 
-  // const getSortedEventData = () => {
-  //   if (!Array.isArray(data) || data.length === 0) return [];
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
 
-  //   return [...data].sort((a, b) => {
-  //     let valA, valB;
+        case 'alpha':
+          valA = a.name || '';
+          valB = b.name || '';
 
-  //     switch (sortField) {
-  //       case 'events_check_in':
-  //         valA = Number(a.total_events_checked_in) || 0;
-  //         valB = Number(b.total_events_checked_in) || 0;
-  //         return sortDirection === 'asc' ? valA - valB : valB - valA;
+          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
 
-  //       case 'events_approved':
-  //         valA = Number(a.count_events_approved_not_checked_in) || 0;
-  //         valB = Number(b.count_events_approved_not_checked_in) || 0;
+        case 'email':
+          valA = a.cleaned_email || '';
+          valB = b.cleaned_email || '';
 
-  //         return sortDirection === 'asc' ? valA - valB : valB - valA;
+          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
 
-  //       case 'alpha':
-  //         valA = a.name || '';
-  //         valB = b.name || '';
+        default:
+          return 0;
+      }
+    });
+  };
 
-  //         return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+  const handleSortToggle = (field: string) => {
+    console.log(`Sort Field: ${field}, Sort Direction: ${sortDirection}`);
+    if (sortField === field) {
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
 
-  //       case 'email':
-  //         valA = a.cleaned_email || '';
-  //         valB = b.cleaned_email || '';
-
-  //         return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-
-  //       default:
-  //         return 0;
-  //     }
-  //   });
-  // };
-
-  // const handleSortToggle = (field: string) => {
-  //   console.log(`Sort Field: ${field}, Sort Direction: ${sortDirection}`);
-  //   if (sortField === field) {
-  //     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
-  //   } else {
-  //     setSortField(field);
-  //     setSortDirection('desc');
-  //   }
-  // };
-
-  // const sortedUserAnalytics = getSortedEventData();
+  const sortedUserAnalytics = getSortedEventData();
 
   return (
     <div>
@@ -173,31 +133,31 @@ export default function Users() {
 
               <th
                 className="px-4 py-3 text-left font-medium text-gray-700"
-                // onClick={() => handleSortToggle('alpha')}
+                onClick={() => handleSortToggle('alpha')}
               >
                 Name
-                {/* {renderSortIcon('alpha')} */}
+                {renderSortIcon('alpha')}
               </th>
               <th
                 className="px-4 py-3 text-left font-medium text-gray-700"
-                // onClick={() => handleSortToggle('email')}
+                onClick={() => handleSortToggle('email')}
               >
                 Email
-                {/* {renderSortIcon('email')} */}
+                {renderSortIcon('email')}
               </th>
               <th
                 className="px-4 py-3 text-left font-medium text-gray-700"
-                // onClick={() => handleSortToggle('events_check_in')}
+                onClick={() => handleSortToggle('events_check_in')}
               >
                 Events Checked In
-                {/* {renderSortIcon('events_check_in')} */}
+                {renderSortIcon('events_check_in')}
               </th>
               <th
                 className="px-4 py-3 text-left font-medium text-gray-700"
-                // onClick={() => handleSortToggle('events_approved')}
+                onClick={() => handleSortToggle('events_approved')}
               >
                 Events Approved
-                {/* {renderSortIcon('events_approved')} */}
+                {renderSortIcon('events_approved')}
               </th>
             </tr>
           </thead>
@@ -221,7 +181,7 @@ export default function Users() {
                 </td>
               </tr>
             ) : (
-              data.map((user, index) => (
+              getSortedEventData().map((user, index) => (
                 <tr key={user.cleaned_email} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">{index + 1}</td>
                   <td className="px-4 py-3 font-medium">{user.name}</td>

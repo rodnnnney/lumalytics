@@ -1,17 +1,16 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { useState, useCallback, useEffect } from "react";
-import FileUploadDemo from "@/utils/csvUpload";
-import { Loader2 } from "lucide-react";
-import { csvToMeta } from "@/api/supaEdge/meta-csv";
-import { csvToAttendees } from "@/api/supaEdge/main-csv";
-import { supabase } from "@/lib/supabase/client";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "react-toastify/dist/ReactToastify.css";
-import { sendErrorToast, sendSuccessToast } from "../toast/toast";
-import { useCsvMetaStore } from "@/store/csvMetaStore";
+import { Button } from '@/components/ui/button';
+import { useState, useCallback, useEffect } from 'react';
+import FileUploadDemo from '@/utils/csvUpload';
+import { Loader2 } from 'lucide-react';
+import { csvToMeta } from '@/api/supaEdge/meta-csv';
+import { csvToAttendees } from '@/api/supaEdge/main-csv';
+import { supabase } from '@/lib/supabase/client';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { sendErrorToast, sendSuccessToast } from '../toast/toast';
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -34,7 +33,7 @@ interface FeedbackPopup {
 
 export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const [formData, setFormData] = useState<FormData>({
-    eventName: "",
+    eventName: '',
     date: null,
   });
 
@@ -42,24 +41,17 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadFn, setUploadFn] = useState<
-    ((customPath?: string) => Promise<void>) | null
-  >(null);
+  const [uploadFn, setUploadFn] = useState<((customPath?: string) => Promise<void>) | null>(null);
   const [feedback, setFeedback] = useState<FeedbackPopup>({
     show: false,
     success: false,
-    message: "",
+    message: '',
   });
 
-  const { refreshCsvMeta } = useCsvMetaStore();
-
-  const isFormValid =
-    formData.eventName.trim() !== "" && formData.date !== null;
+  const isFormValid = formData.eventName.trim() !== '' && formData.date !== null;
 
   const hasUnsavedChanges = useCallback(() => {
-    return (
-      formData.eventName !== "" || formData.date !== null || hasUploadedFiles
-    );
+    return formData.eventName !== '' || formData.date !== null || hasUploadedFiles;
   }, [formData.eventName, formData.date, hasUploadedFiles]);
 
   const handleClose = useCallback(() => {
@@ -71,10 +63,10 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   }, [hasUnsavedChanges, onClose]);
 
   const handleConfirmClose = useCallback(() => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       date: null,
-      eventName: "",
+      eventName: '',
     }));
     setSelectedFiles([]);
     setHasUploadedFiles(false);
@@ -87,7 +79,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [name]: value,
       }));
@@ -96,7 +88,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
   );
 
   const handleDateChange = useCallback((date: Date | null) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       date: date,
     }));
@@ -133,7 +125,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
           data: { user },
         } = await supabase.auth.getUser();
         if (!user?.id) {
-          throw new Error("User not authenticated");
+          throw new Error('User not authenticated');
         }
 
         await uploadFn(user.id);
@@ -144,8 +136,8 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
         const eventDate = formData.date || new Date();
         const formattedDate = eventDate.toISOString();
 
-        console.log("Submitting event with data:", {
-          bucket: "csvs",
+        console.log('Submitting event with data:', {
+          bucket: 'csvs',
           path: filePath,
           userid: user.id,
           eventid: eventId,
@@ -155,7 +147,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
 
         const [csvMetadata, csvAttendeesData] = await Promise.all([
           csvToMeta({
-            bucket: "csvs",
+            bucket: 'csvs',
             path: filePath,
             userid: user.id,
             eventid: eventId,
@@ -163,7 +155,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
             eventdate: formattedDate,
           }),
           csvToAttendees({
-            bucket: "csvs",
+            bucket: 'csvs',
             path: filePath,
             userid: user.id,
             eventid: eventId,
@@ -178,24 +170,22 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
           throw new Error(csvMetaerror.message || csvAttendeesError.message);
         }
 
-        console.log("Event created successfully:", {
+        console.log('Event created successfully:', {
           eventId,
           filePath,
           csvMetadata,
           csvAttendeesData,
         });
 
-        sendSuccessToast("Event created successfully");
+        sendSuccessToast('Event created successfully');
 
         handleConfirmClose();
-
-        await refreshCsvMeta();
       } catch (error) {
-        console.error("Error creating event:", error);
+        console.error('Error creating event:', error);
         sendErrorToast(error.message);
       }
     },
-    [uploadFn, selectedFiles, formData, feedback.show, refreshCsvMeta]
+    [uploadFn, selectedFiles, formData, feedback.show]
   );
 
   if (!isOpen) return null;
@@ -207,10 +197,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
       <div className="relative z-50 w-full max-w-4xl rounded-lg bg-white/95 p-6 shadow-xl transition-all duration-300">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Add New Event</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
             ×
           </button>
         </div>
@@ -270,9 +257,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
               Cancel
             </Button>
             <Button
-              disabled={
-                !isFormValid || !hasUploadedFiles || !uploadFn || isSubmitting
-              }
+              disabled={!isFormValid || !hasUploadedFiles || !uploadFn || isSubmitting}
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
@@ -282,7 +267,7 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
                   Creating Event...
                 </>
               ) : (
-                "Create Event"
+                'Create Event'
               )}
             </Button>
           </div>
@@ -296,8 +281,8 @@ export default function AddEventModal({ isOpen, onClose }: AddEventModalProps) {
             <h3 className="mb-4 text-lg font-semibold">Confirm Close</h3>
             <p className="mb-6 text-gray-600">
               You have unsaved changes
-              {hasUploadedFiles ? " (including uploaded files)" : ""}. Are you
-              sure you want to close? Your progress will be lost.
+              {hasUploadedFiles ? ' (including uploaded files)' : ''}. Are you sure you want to
+              close? Your progress will be lost.
             </p>
             <div className="flex justify-end space-x-3">
               <Button
