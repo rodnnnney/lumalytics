@@ -6,31 +6,25 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
-import { supabase } from '@/lib/supabase/client';
 import { formatDateForChart } from '@/utils/format';
-import { getReturningUsersCount } from '@/utils/timeCompare';
 
 import NumberFlow from '@number-flow/react';
 import { ChartDataItem, EventData, metadata, userObject } from '@/types/metaObj';
-import AddEventButton from '@/components/addEvent/AddEventButton';
 import CustomLabels from '@/components/graphs/barChart';
-import SimpleLineChart from '@/components/graphs/LineGraph';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
-  const [returnRate, setReturnRate] = useState<string | null>(null);
-  const [eventData, setEventData] = useState<EventData[]>([]);
-
   const [sortField, setSortField] = useState('eventdate');
   const [sortDirection, setSortDirection] = useState('desc');
   const isInitialMount = useRef(true);
-
-  const [metaData, setMetaData] = useState<metadata[]>([]);
-
-  const { user, error: authError, loading: authLoading } = useAuth();
+  const {
+    user,
+    error: authError,
+    //  loading: authLoading
+  } = useAuth();
 
   const router = useRouter();
 
@@ -129,7 +123,7 @@ export default function Home() {
 
   const {
     data,
-    error,
+    //error,
     isLoading: csvLoading,
   } = useQuery({
     queryKey: ['csvMeta', user?.id],
@@ -153,22 +147,12 @@ export default function Home() {
 
     if (savedSortField) setSortField(savedSortField);
     if (savedSortDirection) setSortDirection(savedSortDirection);
-
-    // Initial load completion will be marked in the writing effect
-    // console.log('[Dashboard Initial Load] State after potential localStorage update:', {
-    //  sortField,
-    //  sortDirection,
-    //});
   }, []);
 
-  // Write to localStorage on state change, *after* initial mount
   useEffect(() => {
     if (isInitialMount.current) {
-      // Mark initial mount as done after the first render completes
-      // and state potentially updated from localStorage is stable.
       isInitialMount.current = false;
     } else {
-      // Only write to localStorage on subsequent renders/state changes
       console.log('[Dashboard State Change] Writing to localStorage:', {
         sortField,
         sortDirection,
@@ -178,11 +162,11 @@ export default function Home() {
     }
   }, [sortField, sortDirection]); // Still depends on the state variables
 
-  const sortMetaData = () => {
-    return [...(data?.userAnalytics || [])].sort((a, b) => {
-      return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
-    });
-  };
+  // const sortMetaData = () => {
+  //   return [...(data?.userAnalytics || [])].sort((a, b) => {
+  //     return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
+  //   });
+  // };
 
   const handleSortToggle = (field: string) => {
     console.log(`[Dashboard Sort Toggle] Clicked field: ${field}. Current state:`, {
@@ -198,7 +182,7 @@ export default function Home() {
     } else {
       console.log(`[Dashboard Sort Toggle] Setting new field: ${field}, direction: desc`);
       setSortField(field);
-      setSortDirection('desc'); // This will trigger the writing useEffect for both states if they change
+      setSortDirection('desc');
     }
   };
 
@@ -260,30 +244,26 @@ export default function Home() {
 
   const sortedEventData = getSortedEventData();
 
-  const sortedMetaData = sortMetaData();
+  //const sortedMetaData = sortMetaData();
 
   return (
-    <div className="flex w-full flex-col ">
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="flex w-full flex-col">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="text-md font-semibold text-gray-600">Welcome home</p>
           <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
             Your overview
           </p>
         </div>
-        <Select value={timeRange} onValueChange={setTimeRange}></Select>
-      </div>
-
-      <div className="mb-6 flex justify-end gap-4">
-        <Button
-          onClick={() => {
-            router.push('/upload');
-          }}
-        >
-          Upload
-        </Button>
-
-        <AddEventButton />
+        <div className="flex items-center gap-4">
+          <Select value={timeRange} onValueChange={setTimeRange} />
+          <Button
+            className="text-white bg-luma-blue rounded-lg shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
+            onClick={() => router.push('/upload')}
+          >
+            Upload Event
+          </Button>
+        </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
@@ -385,8 +365,8 @@ export default function Home() {
                   </tr>
                 ) : data?.eventData?.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                      No events found
+                    <td colSpan={4} className="px-4 py-8 text-center pl-36 text-gray-500">
+                      No events found, try uploading one!
                     </td>
                   </tr>
                 ) : (

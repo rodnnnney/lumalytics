@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { HomeIcon, ChartBarIcon, ClockIcon, UsersIcon, CogIcon } from '@heroicons/react/24/outline';
-import { supabase } from '@/lib/supabase/client';
+import { HomeIcon, ClockIcon, UsersIcon, CogIcon } from '@heroicons/react/24/outline';
 
 const navItems = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
-  // { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
-  { name: 'Past Events', href: '/past', icon: ClockIcon },
+  { name: 'Events', href: '/past', icon: ClockIcon },
   { name: 'Attendees', href: '/users', icon: UsersIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ];

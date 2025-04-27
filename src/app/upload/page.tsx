@@ -5,7 +5,7 @@ import { formatBytes } from '@/utils/format';
 import { shortenString } from '@/utils/shorten';
 import { uploadFile } from '@/utils/supabase/upload';
 import { useAuth } from '@/context/AuthContext';
-
+import { useRouter } from 'next/navigation';
 import { useState, useRef } from 'react';
 import { csvToMeta } from '@/api/supaEdge/meta-csv';
 
@@ -23,7 +23,6 @@ export default function Upload() {
   const [event_name, setEventName] = useState('');
   const [event_date, setEventDate] = useState('');
   const [file, setFile] = useState<File>(new File([''], ''));
-  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -32,7 +31,16 @@ export default function Upload() {
   const [editingIndex, setEditingIndex] = useState<number>();
   const [deleteItem, setDeleteItem] = useState<UploadItem>();
 
-  const { user, loading: authLoading } = useAuth();
+  const [confirmUploadToDb, setConfirmUploadToDb] = useState(false);
+
+  const [confirmHome, setConfirmHome] = useState(false);
+
+  const {
+    user,
+    // loading: authLoading
+  } = useAuth();
+
+  const router = useRouter();
 
   const MAX_FILE_SIZE_MB = 1;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -51,13 +59,11 @@ export default function Upload() {
           event.target.value = '';
         }
         setFile(new File([''], ''));
-        setImagePreviewUrl('');
+
         return;
       }
 
       setFile(selectedFile);
-      const previewUrl = URL.createObjectURL(selectedFile);
-      setImagePreviewUrl(previewUrl);
     }
   };
 
@@ -105,19 +111,15 @@ export default function Upload() {
 
       if (fileName.endsWith(allowedExtension)) {
         setFile(droppedFile);
-
-        // Create a preview URL for the CSV file
-        const previewUrl = URL.createObjectURL(droppedFile);
-        setImagePreviewUrl(previewUrl);
       } else {
         alert('Please upload a CSV file');
       }
     }
   };
 
-  const checkData = () => {
-    console.log(uploadItems);
-  };
+  // const checkData = () => {
+  //   console.log(uploadItems);
+  // };
 
   const handleConfirmClose = () => {
     clear();
@@ -126,7 +128,7 @@ export default function Upload() {
 
   const clear = () => {
     setFile(new File([''], ''));
-    setImagePreviewUrl('');
+
     setEventName('');
     setEventDate('');
     setIsModalOpen(false);
@@ -182,7 +184,6 @@ export default function Upload() {
           updatedItems[editingIndex] = updated; // Use validated editingIndex
           setUploadItems(updatedItems);
 
-          // Only clear the form if changes were made
           clear();
         } else {
           // If no changes were made, just close the modal without clearing
@@ -227,26 +228,26 @@ export default function Upload() {
       return;
     }
 
-    for (const upload of uploadItems) {
-      const eventId = crypto.randomUUID();
-      const filePath = `${user.id}/${upload.file.name}`;
-      const formattedDate = upload.eventDate;
+    try {
+      for (const upload of uploadItems) {
+        const eventId = crypto.randomUUID();
+        const filePath = `${user.id}/${upload.file.name}`;
+        const formattedDate = upload.eventDate;
 
-      console.log('Submitting event with data:', {
-        bucket: 'csvs',
-        path: filePath,
-        userid: user.id,
-        eventid: eventId,
-        eventname: upload.eventName,
-        eventdate: formattedDate,
-      });
+        console.log('Submitting event with data:', {
+          bucket: 'csvs',
+          path: filePath,
+          userid: user.id,
+          eventid: eventId,
+          eventname: upload.eventName,
+          eventdate: formattedDate,
+        });
 
-      try {
         try {
           await uploadFile(upload, user.id);
           console.log('✅-File uploaded successfully:');
         } catch (e) {
-          console.error('No duplicate uploads allowed');
+          console.error(`No duplicate uploads allowed ${e}`);
           return;
         }
 
@@ -265,26 +266,69 @@ export default function Upload() {
         }
 
         console.log('Event metadata:', data);
-
-        // Reset the upload form
-        clear();
-        setUploadItems([]);
-      } catch (error) {
-        console.error(`[ERROR] - Failed to process upload`);
       }
+
+      clear();
+      setUploadItems([]);
+    } catch (error) {
+      console.error(`[ERROR] - Failed to process upload ${error}`);
+    } finally {
+      router.push('/');
     }
+  };
+
+  const handleHome = () => {
+    if (uploadItems.length > 0) {
+      setConfirmHome(true);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const handleConfirmHome = () => {
+    setConfirmHome(false);
+    router.push('/');
   };
 
   return (
     <div>
-      <h1>Upload</h1>
+      <div className="flex items-center justify-between px-4">
+        <p className="p-12 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+          Upload
+        </p>
+
+        <div className="flex space-x-4 pr-4">
+          <div className="px-4 py-2 bg-white rounded-xl border" onClick={handleHome}>
+            <Button>Home</Button>
+          </div>
+
+          <div className="px-4 py-2 bg-white rounded-xl border" onClick={handleAddEvent}>
+            <Button>Create New Event</Button>
+          </div>
+
+          {uploadItems.length > 0 ? (
+            <div
+              className="px-4 py-2 rounded-xl border bg-luma-blue text-white"
+              onClick={() => setConfirmUploadToDb(true)}
+            >
+              <Button>Upload All Events</Button>
+            </div>
+          ) : (
+            <div className="px-4 py-2 bg-white rounded-xl border opacity-50 cursor-not-allowed">
+              <Button disabled className="pointer-events-none">
+                Upload All Events
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className=" w=full "></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-12">
         {uploadItems.map((item, index) => (
           <div key={index} className="border rounded-lg p-4 shadow-sm bg-white">
             <div className="flex flex-col space-y-2">
-              <h3 className="font-semibold text-lg">{shortenString(item.eventName, 15)}</h3>
+              <h3 className="font-semibold text-lg">{shortenString(item.eventName, 40)}</h3>
               <p className="text-sm text-gray-500">{formatBytes(item.file.size)}</p>
               <p className="text-gray-500">{shortenString(item.file.name, 15)}</p>
             </div>
@@ -544,26 +588,36 @@ export default function Upload() {
         </div>
       ) : null}
 
-      <div
-        className="absolute bottom-0 right-0 right-0 p-6 bg-white rounded-12 border"
-        onClick={handleAddEvent}
-      >
-        <Button>+</Button>
-      </div>
+      {confirmUploadToDb ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-semibold">
+              {uploadItems.length === 1 ? 'Upload Event?' : 'Upload Events?'}
+            </h3>
 
-      <div
-        className="absolute bottom-0 right-24 right-0 p-6 bg-white rounded-12 border"
-        onClick={checkData}
-      >
-        <Button>Check Data</Button>
-      </div>
-
-      <div
-        className="absolute bottom-30 right-0 p-6 bg-white rounded-12 border"
-        onClick={uploadToDb}
-      >
-        <Button>UPLOAD THAT HOE</Button>
-      </div>
+            {uploadItems.map(item => (
+              <div key={item.eventName}>
+                <p className="text-lg font-medium">{item.eventName}</p>
+                <p className="text-sm">{item.eventDate}</p>
+                <p className="text-sm ">{formatBytes(item.file.size)}</p>
+              </div>
+            ))}
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setConfirmUploadToDb(false)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button onClick={uploadToDb} className="bg-luma-blue hover:bg-luma-blue text-white">
+                Confirm Upload
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

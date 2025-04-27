@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { useAuth } from '@/context/AuthContext';
+import router from 'next/router';
+import { Button } from '@/components/ui/button';
 
 export default function Users() {
   const [sortField, setSortField] = useState('alpha');
@@ -114,7 +116,7 @@ export default function Users() {
     }
   };
 
-  const getSortedEventData = () => {
+  const sortedUserAnalytics = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
 
     return [...data].sort((a, b) => {
@@ -148,10 +150,6 @@ export default function Users() {
           return 0;
       }
     });
-  };
-
-  const sortedUserAnalytics = useMemo(() => {
-    return getSortedEventData();
   }, [data, sortField, sortDirection]);
 
   return (
@@ -172,7 +170,7 @@ export default function Users() {
         <></>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden h-[86vh]">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
@@ -223,7 +221,12 @@ export default function Users() {
               ) : !data || data.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-3 text-center">
-                    No users found
+                    <Button
+                      className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
+                      onClick={() => router.push('/upload')}
+                    >
+                      Add an Event
+                    </Button>
                   </td>
                 </tr>
               ) : (

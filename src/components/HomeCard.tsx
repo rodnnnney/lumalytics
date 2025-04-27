@@ -20,7 +20,6 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
           : Number(value)
       : value;
 
-  // Remove the line that overwrites hoverInfo
   const [isHovered, setIsHovered] = React.useState(false);
   const [mousePos, setMousePos] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -33,7 +32,7 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
 
   return (
     <div
-      className="relative bg-luma-light-green p-6 py-10 rounded-lg shadow-sm border border-luma-dark-green"
+      className="relative p-6 py-10 rounded-lg shadow-sm border border-black"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
@@ -85,7 +84,7 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
         <div className="text-4xl font-bold text-dark-green">{value}</div>
       ) : (
         <NumberFlow
-          className="text-4xl font-bold text-[#5DAD6B]"
+          className="text-4xl font-semibold text-black"
           value={numericValue}
           suffix={typeof value === 'string' && value.includes('%') ? '%' : undefined}
         />

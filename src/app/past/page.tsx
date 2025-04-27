@@ -1,20 +1,18 @@
 'use client';
 
-import AddEventButton from '@/components/addEvent/AddEventButton';
-import { supabase } from '@/lib/supabase/client';
 import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { metadata, userObject } from '@/types/metaObj';
 import { formatDateForChart } from '@/utils/format';
 import { getReturningUsersCount } from '@/utils/timeCompare';
 import { customUrlFormatter } from '@/utils/urlspacer';
-import { useEffect, useState } from 'react';
 import BasicPie from '@/components/graphs/SimplePie';
 import SimpleLineChart from '@/components/graphs/LineGraph';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface CsvMetaData {
   userAnalytics: userObject[] | [];
@@ -23,9 +21,10 @@ interface CsvMetaData {
 
 export default function Past() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const fetchUserAnalytics = async () => {
-    let csvMetaData: CsvMetaData = {
+    const csvMetaData: CsvMetaData = {
       userAnalytics: [],
       metaData: [],
     };
@@ -72,7 +71,7 @@ export default function Past() {
 
   const {
     data,
-    error,
+    // error,
     isLoading: isQueryLoading,
   } = useQuery({
     queryKey: ['userAnalytics', user?.id],
@@ -124,11 +123,15 @@ export default function Past() {
             <></>
           )}
 
-          {data?.userAnalytics?.length === 0 && !(isQueryLoading || authLoading) ? (
-            <div className="w-full h-[80vh] flex items-center justify-center">
+          {data?.userAnalytics?.length === 0 && (!isQueryLoading || !authLoading) ? (
+            <div className="w-full h-[75vh] flex items-center justify-center">
               <div className="text-center">
-                <div className="text-2xl text-gray-500 mb-6">No past events found</div>
-                <AddEventButton />
+                <div
+                  className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
+                  onClick={() => router.push('/upload')}
+                >
+                  Add an Event
+                </div>
               </div>
             </div>
           ) : (

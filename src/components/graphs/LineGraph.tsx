@@ -5,11 +5,6 @@ import { LineChart } from '@mui/x-charts/LineChart';
 
 const margin = { right: 24 };
 
-// Default data
-const defaultUData = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
-const defaultPData = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
-const defaultXLabels = ['Page A', 'Page B', 'Page C', 'Page D', 'Page E', 'Page F', 'Page G'];
-
 type SeriesData = number[];
 type Labels = string[];
 
@@ -30,9 +25,14 @@ export default function SimpleLineChart({
   xLabels,
   height = 300,
 }: SimpleLineChartProps = {}) {
-  const data1 = series1Data && series1Data.length > 0 ? series1Data : defaultPData;
-  const data2 = series2Data && series2Data.length > 0 ? series2Data : defaultUData;
-  const labels = xLabels && xLabels.length > 0 ? xLabels : defaultXLabels;
+  // Return null if no data is provided
+  if ((!series1Data || series1Data.length === 0) && (!series2Data || series2Data.length === 0)) {
+    return null;
+  }
+
+  const data1 = series1Data && series1Data.length > 0 ? series1Data : [];
+  const data2 = series2Data && series2Data.length > 0 ? series2Data : [];
+  const labels = xLabels && xLabels.length > 0 ? xLabels : [];
 
   return (
     <LineChart
