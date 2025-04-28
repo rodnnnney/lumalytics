@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   Card,
   CardContent,
-  CardDescription,
+  //CardDescription
   CardFooter,
   CardHeader,
   CardTitle,
@@ -43,7 +43,7 @@ export default function Settings() {
     window.location.href = '/';
   };
 
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, refetch } = useQuery({
     queryKey: ['settings', user?.id],
     queryFn: fetchUser,
     staleTime: Infinity,

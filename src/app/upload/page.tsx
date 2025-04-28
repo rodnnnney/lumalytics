@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useRef } from 'react';
 import { csvToMeta } from '@/api/supaEdge/meta-csv';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface UploadItem {
   eventName: string;
@@ -35,12 +36,11 @@ export default function Upload() {
 
   const [confirmHome, setConfirmHome] = useState(false);
 
-  const {
-    user,
-    // loading: authLoading
-  } = useAuth();
+  const { user } = useAuth();
 
   const router = useRouter();
+
+  const queryClient = useQueryClient();
 
   const MAX_FILE_SIZE_MB = 1;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -221,6 +221,7 @@ export default function Upload() {
   };
 
   const uploadToDb = async () => {
+    setIsUploading(true);
     console.log('[INFO] - Initializing upload to DB');
 
     if (!user) {
@@ -228,52 +229,54 @@ export default function Upload() {
       return;
     }
 
+    const id = user?.id;
+
     try {
       for (const upload of uploadItems) {
         const eventId = crypto.randomUUID();
-        const filePath = `${user.id}/${upload.file.name}`;
+        const filePath = `${id}/${upload.file.name}`;
         const formattedDate = upload.eventDate;
-
         console.log('Submitting event with data:', {
           bucket: 'csvs',
           path: filePath,
-          userid: user.id,
+          userid: id,
           eventid: eventId,
           eventname: upload.eventName,
           eventdate: formattedDate,
         });
-
         try {
-          await uploadFile(upload, user.id);
+          await uploadFile(upload, id);
           console.log('✅-File uploaded successfully:');
         } catch (e) {
           console.error(`No duplicate uploads allowed ${e}`);
           return;
         }
-
         const { data, error } = await csvToMeta({
           bucket: 'csvs',
           path: filePath,
-          userid: user.id,
+          userid: id,
           eventid: eventId,
           eventname: upload.eventName,
           eventdate: formattedDate,
         });
-
         if (error) {
           console.error('Failed to submit event metadata:', error);
           continue;
         }
-
         console.log('Event metadata:', data);
       }
-
       clear();
       setUploadItems([]);
     } catch (error) {
       console.error(`[ERROR] - Failed to process upload ${error}`);
     } finally {
-      router.push('/');
+      setIsUploading(false);
+      router.push('/dashboard');
+
+      queryClient.invalidateQueries({ queryKey: ['userAnalytics', id] });
+      queryClient.invalidateQueries({ queryKey: ['settings', id] });
+      queryClient.invalidateQueries({ queryKey: ['csvMeta', id] });
+      queryClient.invalidateQueries({ queryKey: ['users', id] });
     }
   };
 
@@ -281,13 +284,13 @@ export default function Upload() {
     if (uploadItems.length > 0) {
       setConfirmHome(true);
     } else {
-      router.push('/');
+      router.push('/dashboard');
     }
   };
 
   const handleConfirmHome = () => {
     setConfirmHome(false);
-    router.push('/');
+    router.push('/dashboard');
   };
 
   return (
@@ -588,13 +591,46 @@ export default function Upload() {
         </div>
       ) : null}
 
-      {confirmUploadToDb ? (
+      {confirmDelete ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
           <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-semibold">
-              {uploadItems.length === 1 ? 'Upload Event?' : 'Upload Events?'}
-            </h3>
+            <h3 className="mb-4 text-lg font-semibold">Confirm Event Delete?</h3>
+            <p className="mb-2 text-gray-600">
+              <span className="italic">{shortenString(deleteItem?.eventName || '', 20) + ` `}</span>
+              will be deleted.
+            </p>
+            <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setConfirmDelete(false)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (deleteItem) {
+                    handleDelete(deleteItem);
+                  }
+                }}
+                className="bg-red-500 hover:bg-luma-red text-white"
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmHome ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold">
+              {uploadItems.length === 1 ? 'Return Home?' : 'Confirm Upload Events?'}
+            </h2>
 
             {uploadItems.map(item => (
               <div key={item.eventName}>
@@ -603,7 +639,7 @@ export default function Upload() {
                 <p className="text-sm ">{formatBytes(item.file.size)}</p>
               </div>
             ))}
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 disabled:opacity-50">
               <Button
                 onClick={() => setConfirmUploadToDb(false)}
                 variant="outline"
@@ -611,8 +647,23 @@ export default function Upload() {
               >
                 Cancel
               </Button>
-              <Button onClick={uploadToDb} className="bg-luma-blue hover:bg-luma-blue text-white">
-                Confirm Upload
+              <Button
+                onClick={uploadToDb}
+                className="bg-luma-blue hover:bg-luma-blue text-white disabled:opacity-50 "
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="flex text-lg items-center space-x-4">
+                      <p className=" text-black">Uploading</p>
+                      <div className="flex items-center w-[35px]  ">
+                        <div className="loader "></div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  'Confirm Upload'
+                )}
               </Button>
             </div>
           </div>

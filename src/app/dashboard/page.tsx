@@ -10,10 +10,10 @@ import { formatDateForChart } from '@/utils/format';
 
 import NumberFlow from '@number-flow/react';
 import { ChartDataItem, EventData, metadata, userObject } from '@/types/metaObj';
-import CustomLabels from '@/components/graphs/barChart';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import CustomLabels from '@/components/graphs/BarChart';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
