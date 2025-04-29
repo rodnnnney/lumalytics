@@ -19,7 +19,7 @@ export default function LoginForm() {
     ).auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `lumalytics.app/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
       },
     });
 
