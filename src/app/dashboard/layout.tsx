@@ -1,5 +1,10 @@
-'use client';
 import Sidebar from '@/components/sidebar';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Home | Lumalytics',
+  description: 'A lightweight analytics platform for Luma Hosts',
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

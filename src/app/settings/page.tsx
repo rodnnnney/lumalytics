@@ -47,9 +47,6 @@ export default function Settings() {
     queryFn: fetchUser,
     staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    // refetchOnMount: false,
-    // refetchOnWindowFocus: false,
-    // refetchOnReconnect: false,
     enabled: !!user,
   });
 
@@ -78,59 +75,61 @@ export default function Settings() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-transparent">
+    <div>
+      <p className="pb-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
         Settings
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Account Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Email</p>
-                <p className="mt-1">{data!.email}</p>
-              </div>
+      </p>
+      <div className="container mx-auto py-8 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Account Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Email</p>
+                  <p className="mt-1">{data!.email}</p>
+                </div>
 
-              <div>
-                <p className="text-sm font-medium text-gray-500 ">Last Sign In</p>
-                <p className="mt-1">{new Date().toLocaleString()}</p>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 ">Last Sign In</p>
+                  <p className="mt-1">{new Date().toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex mb-4">
+              <Button className="bg-luma-red text-white" onClick={handleLogout}>
+                Sign Out
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {showLogout && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-opacity-75 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl w-96 p-6">
+                <div className="mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">Confirm Sign Out</h3>
+                  <p className="text-sm text-gray-500 mt-1">Are you sure you want to sign out?</p>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors duration-500 hover:bg-gray-50"
+                    onClick={() => setShowLogout(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-luma-red rounded-md text-sm font-medium text-white hover:bg-red-700 transition-colors duration-500"
+                    onClick={logout}
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
-          </CardContent>
-          <CardFooter className="flex mb-4">
-            <Button className="bg-luma-red text-white" onClick={handleLogout}>
-              Sign Out
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {showLogout && (
-          <div className="fixed inset-0 backdrop-blur-sm bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-96 p-6">
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">Confirm Sign Out</h3>
-                <p className="text-sm text-gray-500 mt-1">Are you sure you want to sign out?</p>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors duration-500 hover:bg-gray-50"
-                  onClick={() => setShowLogout(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-luma-red rounded-md text-sm font-medium text-white hover:bg-red-700 transition-colors duration-500"
-                  onClick={logout}
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

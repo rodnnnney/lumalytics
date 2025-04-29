@@ -289,13 +289,17 @@ export default function Upload() {
     }
   };
 
+  const confirmGoHome = () => {
+    setConfirmHome(false);
+    router.push('/dashboard');
+  };
+
   return (
     <div className="h-[93vh]">
       <div className="flex items-center justify-between px-4 ">
-        <p className="p-12 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent ">
+        <p className="pb-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
           Upload
         </p>
-
         <div className="flex space-x-4 pr-4">
           <div className="px-4 py-2 bg-white rounded-xl border" onClick={handleHome}>
             <Button>Home</Button>
@@ -563,7 +567,7 @@ export default function Upload() {
             <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">
               <Button
-                onClick={() => setConfirmDelete(false)}
+                onClick={() => setConfirmHome(false)}
                 variant="outline"
                 className="border-gray-300"
               >

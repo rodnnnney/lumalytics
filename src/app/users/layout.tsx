@@ -1,10 +1,8 @@
-'use client';
-
 import Sidebar from '@/components/sidebar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Settings | Lumalytics',
+  title: 'Attendees | Lumalytics',
   description: 'A lightweight analytics platform for Luma Hosts',
 };
 

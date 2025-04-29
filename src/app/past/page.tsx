@@ -68,18 +68,11 @@ export default function Past() {
     return csvMetaData;
   };
 
-  const {
-    data,
-    // error,
-    isLoading: isQueryLoading,
-  } = useQuery({
+  const { data, isLoading: isQueryLoading } = useQuery({
     queryKey: ['userAnalytics', user?.id],
     queryFn: fetchUserAnalytics,
     staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    // refetchOnMount: false,
-    // refetchOnWindowFocus: false,
-    // refetchOnReconnect: false,
     enabled: !!user,
   });
 
@@ -107,12 +100,11 @@ export default function Past() {
   return (
     <div>
       <div className="w-full min-h-screen">
+        <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+          Past Events
+        </p>
         <div className="flex flex-col gap-6 p-4">
           <div className="flex justify-between items-center w-full"></div>
-
-          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
-            Past Events
-          </p>
 
           {isQueryLoading || authLoading ? (
             <div className="w-full h-[80vh] flex items-center justify-center">

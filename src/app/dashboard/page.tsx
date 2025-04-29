@@ -120,18 +120,11 @@ export default function Home() {
     }
   };
 
-  const {
-    data,
-    //error,
-    isLoading: csvLoading,
-  } = useQuery({
+  const { data, isLoading: csvLoading } = useQuery({
     queryKey: ['csvMeta', user?.id],
     queryFn: fetchCsvMetaData,
     staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    // refetchOnMount: false,
-    // refetchOnWindowFocus: false,
-    // refetchOnReconnect: false,
     enabled: !!user,
   });
 
@@ -249,7 +242,6 @@ export default function Home() {
     <div className="flex w-full flex-col">
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <p className="text-md font-semibold text-gray-600">Welcome home</p>
           <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
             Your overview
           </p>
@@ -310,7 +302,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 md:gap-6">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 md:gap-6 ">
         {!csvLoading ? (
           <div>
             <CustomLabels eventData={data?.graphData} />
@@ -318,8 +310,8 @@ export default function Home() {
         ) : null}
 
         <div>
-          <div className="overflow-x-auto rounded-b-sm">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <div className="overflow-x-auto rounded-lg shadow">
+            <table className="min-w-full bg-white">
               <thead className="bg-gray-50">
                 <tr>
                   <th

@@ -32,7 +32,7 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
 
   return (
     <div
-      className="relative p-6 py-10 rounded-lg shadow-sm border border-black"
+      className="relative p-6 py-10 rounded-lg shadow"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
