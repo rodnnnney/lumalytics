@@ -291,9 +291,9 @@ export default function Upload() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between px-4">
-        <p className="p-12 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+    <div className="bg-white h-[93vh]">
+      <div className="flex items-center justify-between px-4 ">
+        <p className="p-12 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent ">
           Upload
         </p>
 
@@ -326,7 +326,7 @@ export default function Upload() {
       <div className=" w=full "></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-12">
         {uploadItems.map((item, index) => (
-          <div key={index} className="border rounded-lg p-4 shadow-sm bg-white">
+          <div key={index} className="border rounded-lg p-4 shadow-sm bg-white ">
             <div className="flex flex-col space-y-2">
               <h3 className="font-semibold text-lg">{shortenString(item.eventName, 40)}</h3>
               <p className="text-sm text-gray-500">{formatBytes(item.file.size)}</p>

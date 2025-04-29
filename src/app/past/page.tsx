@@ -129,7 +129,7 @@ export default function Past() {
                   className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
                   onClick={() => router.push('/upload')}
                 >
-                  Add an Event
+                  Upload an Event
                 </div>
               </div>
             </div>

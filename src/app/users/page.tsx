@@ -4,11 +4,12 @@ import { userObject } from '@/types/metaObj';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { fetchReoccuring } from '@/queries/fetch';
 
 export default function Users() {
+  const router = useRouter();
   const [sortField, setSortField] = useState('alpha');
   const [sortDirection, setSortDirection] = useState('desc');
   const [selectedUser, setSelectedUser] = useState<userObject | null>(null);
@@ -323,7 +324,7 @@ export default function Users() {
           <></>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden h-[86vh]">
+            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
@@ -374,12 +375,14 @@ export default function Users() {
                 ) : !data || data.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-3 text-center">
-                      <Button
-                        className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
-                        onClick={() => router.push('/upload')}
-                      >
-                        Add an Event
-                      </Button>
+                      <div className="flex justify-center">
+                        <Button
+                          className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
+                          onClick={() => router.push('/upload')}
+                        >
+                          Upload an Event
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ) : (
