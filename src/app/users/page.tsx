@@ -3,10 +3,10 @@
 import { userObject } from '@/types/metaObj';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { useAuth } from '@/context/AuthContext';
 import router from 'next/router';
 import { Button } from '@/components/ui/button';
+import { fetchReoccuring } from '@/queries/fetch';
 
 export default function Users() {
   const [sortField, setSortField] = useState('alpha');

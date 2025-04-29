@@ -2,11 +2,11 @@ import { redirect } from 'next/dist/server/api-utils';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // redirect() {
+  // redirects() {
   //   return [
   //     {
-  //       source: '/auth/login',
-  //       destination: '/signin',
+  //       source: '/',
+  //       destination: '/dashboard',
   //       permanent: false,
   //     },
   //   ];
@@ -18,10 +18,6 @@ const nextConfig = {
     'socket.io-client',
     'socket.io-parser',
   ],
-  // experimental: {
-  //   esmExternals: 'loose',
-  // },
-
   webpack: (config: { resolve: { fallback: any } }) => {
     // Add a rule to handle ESM modules
     config.resolve.fallback = {

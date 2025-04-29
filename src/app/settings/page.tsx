@@ -1,6 +1,4 @@
 'use client';
-
-import { supabase } from '@/lib/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -13,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { supabase } from '@/utils/supabase/client';
 
 export default function Settings() {
   const [showLogout, setShowLogout] = useState(false);

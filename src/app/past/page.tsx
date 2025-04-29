@@ -1,7 +1,5 @@
 'use client';
 
-import { fetchMeta } from '@/lib/supabase/queries/fetch';
-import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { metadata, userObject } from '@/types/metaObj';
 import { formatDateForChart } from '@/utils/format';
 import { getReturningUsersCount, getCheckinTimeStats } from '@/utils/timeCompare';
@@ -13,6 +11,7 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { fetchMeta, fetchReoccuring } from '@/queries/fetch';
 
 interface CsvMetaData {
   userAnalytics: userObject[] | [];

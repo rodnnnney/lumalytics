@@ -4,8 +4,6 @@ import { HomeCard } from '@/components/HomeCard';
 import { Select } from '@/components/ui/select';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { fetchMeta } from '@/lib/supabase/queries/fetch';
-import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { formatDateForChart } from '@/utils/format';
 
 import NumberFlow from '@number-flow/react';
@@ -14,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import CustomLabels from '@/components/graphs/BarChart';
+import { fetchMeta, fetchReoccuring } from '@/queries/fetch';
 
 export default function Home() {
   const [timeRange, setTimeRange] = useState('90d');
@@ -86,7 +85,7 @@ export default function Home() {
         const checkInRate = totalRsvps > 0 ? Math.round((totalCheckins / totalRsvps) * 100) : 0;
 
         const returningUsers = userAnalyticsData.filter(
-          user => Number(user.total_events_checked_in) > 0
+          (user: { total_events_checked_in: any }) => Number(user.total_events_checked_in) > 0
         ).length;
 
         console.log('Returning Users:', returningUsers);
