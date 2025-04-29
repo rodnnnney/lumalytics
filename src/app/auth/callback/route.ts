@@ -15,16 +15,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (error) {
-      console.error('Error exchanging code for session:', error);
-      return NextResponse.redirect(`${requestUrl.origin}/auth/auth-code-error`);
-    }
-
     // Successfully authenticated, redirect to dashboard
     return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
   } catch (error) {
     console.error('Authentication callback error:', error);
     // In case of an error, redirect to the homepage
-    return NextResponse.redirect(`${new URL(request.url).origin}/`);
+    return NextResponse.redirect(`${new URL(request.url).origin}`);
   }
 }
