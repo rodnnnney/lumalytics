@@ -11,6 +11,11 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${requestUrl.origin}/`);
     }
 
+    const redirectTo =
+      process.env.NODE_ENV === 'production'
+        ? 'https://lumalytics.app/dashboard'
+        : 'http://localhost:3000/dashboard';
+
     // Exchange the auth code for a session
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -18,10 +23,10 @@ export async function GET(request: Request) {
     console.log(error);
 
     // Successfully authenticated, redirect to dashboard
-    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+    return NextResponse.redirect(redirectTo);
   } catch (error) {
     console.error('Authentication callback error:', error);
     // In case of an error, redirect to the homepage
-    return NextResponse.redirect(`${new URL(request.url).origin}`);
+    return NextResponse.redirect(`${request}/`);
   }
 }
