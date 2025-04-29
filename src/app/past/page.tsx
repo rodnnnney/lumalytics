@@ -4,7 +4,7 @@ import { fetchMeta } from '@/lib/supabase/queries/fetch';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
 import { metadata, userObject } from '@/types/metaObj';
 import { formatDateForChart } from '@/utils/format';
-import { getReturningUsersCount } from '@/utils/timeCompare';
+import { getReturningUsersCount, getCheckinTimeStats } from '@/utils/timeCompare';
 import { customUrlFormatter } from '@/utils/urlspacer';
 import BasicPie from '@/components/graphs/SimplePie';
 import SimpleLineChart from '@/components/graphs/LineGraph';
@@ -194,8 +194,8 @@ export default function Past() {
                 const returningUsersCount = getReturningUsersCount(eventUsers, event.eventdate);
 
                 interface FeedbackItem {
-                  rating: string;
-                  response: string;
+                  eventRating: string;
+                  eventResponse: string;
                   eventname: string;
                 }
 
@@ -216,6 +216,8 @@ export default function Past() {
                   }
                   return feedbackList;
                 }, []);
+
+                console.log(eventFeedback);
 
                 const recurringAttendeesCount = eventUsers.length - returningUsersCount;
 
@@ -284,8 +286,19 @@ export default function Past() {
                           </div>
 
                           <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
-                            <h2 className="font-bold text-xl mb-2">HI</h2>
-                            <p className="text-gray-700">Average checkin time</p>
+                            {(() => {
+                              const timeStats = getCheckinTimeStats(eventUsers);
+                              return (
+                                <>
+                                  <h2 className="font-bold text-xl mb-2">{timeStats.average}</h2>
+                                  <p className="text-gray-700">Average checkin time</p>
+                                  <div className="text-xs text-gray-500 mt-1 flex flex-col gap-y-1">
+                                    <span>Earliest: {timeStats.earliest}</span>
+                                    <span>Latest: {timeStats.latest}</span>
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
 
                           <div className="rounded-xl shadow-sm px-6 py-4 w-full flex flex-col">
@@ -304,14 +317,14 @@ export default function Past() {
                                   >
                                     <div className="flex items-center mb-1">
                                       <span className="text-yellow-500 mr-1">
-                                        {'★'.repeat(parseInt(feedback.rating) || 0)}
+                                        {'★'.repeat(parseInt(feedback.eventRating) || 0)}
                                       </span>
                                       <span className="text-gray-400 text-sm">
-                                        ({feedback.rating}/5)
+                                        ({feedback.eventRating}/5)
                                       </span>
                                     </div>
                                     <p className="text-sm text-gray-700">
-                                      {feedback.response === '' ? '' : feedback.response}
+                                      {feedback.eventResponse === '' ? '' : feedback.eventResponse}
                                     </p>
                                   </div>
                                 ))}

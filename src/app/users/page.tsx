@@ -1,7 +1,6 @@
 'use client';
 
 import { userObject } from '@/types/metaObj';
-import NumberFlow from '@number-flow/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchReoccuring } from '@/lib/supabase/queries/fetchreoccuring';
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 export default function Users() {
   const [sortField, setSortField] = useState('alpha');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [selectedUser, setSelectedUser] = useState<userObject | null>(null);
   const isInitialMount = useRef(true);
   const { user, loading: authLoading } = useAuth();
 
@@ -116,6 +116,24 @@ export default function Users() {
     }
   };
 
+  // 1. no user -> click then open
+  // 2. yes user -> click them selves -> nothing
+  // 3. yes user -> click another -> close then re
+
+  const handleUserClick = (userData: userObject) => {
+    // If the clicked user IS the currently selected user...
+    if (selectedUser?.userid === userData.userid) {
+      setSelectedUser(null); // ...close the sidebar by setting selectedUser to null.
+      console.log('[handleUserClick] Deselected user:', userData.name);
+      return; // Exit
+    }
+
+    // Otherwise (if no user is selected OR a *different* user is clicked)...
+    setSelectedUser(userData); // ...set the clicked user as selected.
+    // This will either open the sidebar (if null before)
+    // or update the content (if a different user was selected).
+    console.log('[handleUserClick] Selected user:', userData.name);
+  };
   const sortedUserAnalytics = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
 
@@ -153,101 +171,237 @@ export default function Users() {
   }, [data, sortField, sortDirection]);
 
   return (
-    <div>
-      <p className="p-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
-        Attendees
-      </p>
+    <div className="flex h-screen overflow-hidden">
+      {/* User Info Panel */}
+      <div
+        className={`w-80 bg-white shadow-lg border-l border-gray-200 transition-all duration-300 transform ${
+          selectedUser ? 'translate-x-0' : 'translate-x-full'
+        } fixed top-0 right-0 h-full z-10 overflow-y-auto`}
+      >
+        {selectedUser && (
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">User Details</h2>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
 
-      {isLoading ? (
-        <div className="w-full h-[80vh] flex items-center justify-center">
-          <div className="loader"></div>
-        </div>
-      ) : (
-        <></>
-      )}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Name</h3>
+                <p className="text-gray-800 font-medium">{selectedUser.name}</p>
+              </div>
 
-      {isLoading ? (
-        <></>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden h-[86vh]">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                <p className="text-gray-800">{selectedUser.cleaned_email}</p>
+              </div>
 
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700"
-                  onClick={() => handleSortToggle('alpha')}
-                >
-                  Name
-                  {renderSortIcon('alpha')}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700"
-                  onClick={() => handleSortToggle('email')}
-                >
-                  Email
-                  {renderSortIcon('email')}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700"
-                  onClick={() => handleSortToggle('events_check_in')}
-                >
-                  Events Checked In
-                  {renderSortIcon('events_check_in')}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700"
-                  onClick={() => handleSortToggle('events_approved')}
-                >
-                  Events Approved
-                  {renderSortIcon('events_approved')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">First Check-in</h3>
+                <p className="text-gray-800">
+                  {selectedUser.first_checkin_date
+                    ? new Date(selectedUser.first_checkin_date).toLocaleDateString()
+                    : 'N/A'}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Last Check-in</h3>
+                <p className="text-gray-800">
+                  {selectedUser.last_checkin_date
+                    ? new Date(selectedUser.last_checkin_date).toLocaleDateString()
+                    : 'N/A'}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Events Statistics</h3>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="bg-gray-50 p-2 rounded">
+                    <p className="text-xs text-gray-500">Checked In</p>
+                    <p className="font-bold">{selectedUser.total_events_checked_in || 0}</p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <p className="text-xs text-gray-500">Approved</p>
+                    <p className="font-bold">
+                      {selectedUser.count_events_approved_not_checked_in || 0}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <p className="text-xs text-gray-500">Invited</p>
+                    <p className="font-bold">{selectedUser.count_events_invited || 0}</p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <p className="text-xs text-gray-500">Declined</p>
+                    <p className="font-bold">{selectedUser.count_events_declined || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedUser.checked_in_event_names_array &&
+                selectedUser.checked_in_event_names_array.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Events Attended</h3>
+                    <ul className="mt-2 space-y-1 text-gray-800">
+                      {selectedUser.checked_in_event_names_array.map((eventName, index) => (
+                        <li key={index} className="bg-gray-50 p-2 rounded text-sm">
+                          {eventName}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              {Object.entries(selectedUser.all_custom_data).map(([key, value]) => {
+                if (typeof value === 'object' && value !== null) {
+                  const eventData = value;
+                  return (
+                    <div key={key} className="bg-gray-50 p-3 rounded mb-3">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Event: {eventData.event}
+                      </h3>
+                      {eventData.custom_fields && (
+                        <div className="mt-2">
+                          <h4 className="text-xs font-medium text-gray-500">Custom Fields:</h4>
+                          <div className="pl-2 mt-1">
+                            {Object.entries(eventData.custom_fields).map(
+                              ([fieldKey, fieldValue]) => (
+                                <p key={fieldKey} className="text-sm text-gray-800">
+                                  <span className="font-medium">{fieldKey}:</span>{' '}
+                                  {fieldValue as string}
+                                </p>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={key}>
+                    <p className="text-gray-800">
+                      {key}: {value as string}
+                    </p>
+                  </div>
+                );
+              })}
+
+              {selectedUser.average_rating && (
+                <div>
+                  <p className="text-gray-800 font-bold">
+                    {`${Number(selectedUser.average_rating).toFixed()}/5` || 'No rating'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className={`flex-1 transition-all duration-300 ${selectedUser ? 'pr-80' : 'pr-0'}`}>
+        <p className="p-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+          Attendees
+        </p>
+
+        {isLoading ? (
+          <div className="w-full h-[80vh] flex items-center justify-center">
+            <div className="loader"></div>
+          </div>
+        ) : (
+          <></>
+        )}
+
+        {isLoading ? (
+          <></>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden h-[86vh]">
+              <thead className="bg-gray-100">
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-center">
-                    Loading...
-                  </td>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700">#</th>
+
+                  <th
+                    className="px-4 py-3 text-left font-medium text-gray-700"
+                    onClick={() => handleSortToggle('alpha')}
+                  >
+                    Name
+                    {renderSortIcon('alpha')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left font-medium text-gray-700"
+                    onClick={() => handleSortToggle('email')}
+                  >
+                    Email
+                    {renderSortIcon('email')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left font-medium text-gray-700"
+                    onClick={() => handleSortToggle('events_check_in')}
+                  >
+                    Events Checked In
+                    {renderSortIcon('events_check_in')}
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left font-medium text-gray-700"
+                    onClick={() => handleSortToggle('events_approved')}
+                  >
+                    Events Approved
+                    {renderSortIcon('events_approved')}
+                  </th>
                 </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-3 text-center">
-                    Error loading data
-                  </td>
-                </tr>
-              ) : !data || data.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-3 text-center">
-                    <Button
-                      className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
-                      onClick={() => router.push('/upload')}
-                    >
-                      Add an Event
-                    </Button>
-                  </td>
-                </tr>
-              ) : (
-                sortedUserAnalytics.map((user, index) => (
-                  <tr key={user.cleaned_email} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{index + 1}</td>
-                    <td className="px-4 py-3 font-medium">{user.name}</td>
-                    <td className="px-4 py-3">{user.cleaned_email}</td>
-                    <td className="px-4 py-3">
-                      <NumberFlow value={Number(user.total_events_checked_in)} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <NumberFlow value={Number(user.count_events_approved_not_checked_in)} />
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-center">
+                      Loading...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                ) : error ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-center">
+                      Error loading data
+                    </td>
+                  </tr>
+                ) : !data || data.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-center">
+                      <Button
+                        className="text-md text-white mb-6 cursor-pointer px-4 py-2 rounded-lg bg-luma-blue shadow-sm hover:bg-luma-blue/80 transition-colors duration-400"
+                        onClick={() => router.push('/upload')}
+                      >
+                        Add an Event
+                      </Button>
+                    </td>
+                  </tr>
+                ) : (
+                  sortedUserAnalytics.map((user, index) => (
+                    <tr
+                      key={user.cleaned_email}
+                      className="border-t hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleUserClick(user)}
+                    >
+                      <td className="px-4 py-3 font-medium">{index + 1}</td>
+                      <td className="px-4 py-3 font-medium">{user.name}</td>
+                      <td className="px-4 py-3">{user.cleaned_email}</td>
+                      <td className="px-4 py-3">{user.total_events_checked_in}</td>
+                      <td className="px-4 py-3">{user.count_events_approved_not_checked_in}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

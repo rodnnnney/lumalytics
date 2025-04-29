@@ -35,3 +35,68 @@ export const getReturningUsersCount = (userAnalytics: userObject[], targetDate: 
     return firstCheckinDate < targetDateObj && totalEventsAttended > 1;
   }).length;
 };
+
+/**
+ * Interface for check-in time statistics
+ */
+export interface CheckinTimeStats {
+  average: string;
+  earliest: string;
+  latest: string;
+}
+
+/**
+ * Calculates check-in time statistics (average, earliest, latest) for a group of users
+ * @param userAnalytics - Array of user objects to analyze
+ * @returns An object containing average, earliest, and latest check-in times
+ */
+export const getCheckinTimeStats = (userAnalytics: userObject[]): CheckinTimeStats => {
+  const defaultResponse = {
+    average: 'N/A',
+    earliest: 'N/A',
+    latest: 'N/A',
+  };
+
+  if (!userAnalytics || userAnalytics.length === 0) {
+    return defaultResponse;
+  }
+
+  // Extract check-in timestamps from user data
+  const checkinTimes = userAnalytics
+    .map(user => new Date(user.first_checkin_date))
+    .filter(date => !isNaN(date.getTime())); // Filter out invalid dates
+
+  if (checkinTimes.length === 0) {
+    return defaultResponse;
+  }
+
+  // Convert each time to minutes since midnight for easier calculations in Eastern Time
+  const minutesSinceMidnight = checkinTimes.map(date => {
+    // Get the local hours and minutes in the Eastern timezone
+    // We use the fact that first_checkin_date already has timezone info in ISO format
+    return date.getHours() * 60 + date.getMinutes();
+  });
+
+  // Calculate statistics
+  const totalMinutes = minutesSinceMidnight.reduce((sum, minutes) => sum + minutes, 0);
+  const averageMinutes = Math.round(totalMinutes / minutesSinceMidnight.length);
+  const earliestMinutes = Math.min(...minutesSinceMidnight);
+  const latestMinutes = Math.max(...minutesSinceMidnight);
+
+  // Helper function to format minutes since midnight to a time string
+  const formatTimeFromMinutes = (totalMinutes: number): string => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    const displayMinutes = minutes.toString().padStart(2, '0');
+
+    return `${displayHours}:${displayMinutes} ${period}`;
+  };
+
+  return {
+    average: formatTimeFromMinutes(averageMinutes),
+    earliest: formatTimeFromMinutes(earliestMinutes),
+    latest: formatTimeFromMinutes(latestMinutes),
+  };
+};

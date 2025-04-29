@@ -43,7 +43,7 @@ export default function Settings() {
     window.location.href = '/';
   };
 
-  const { data, error, isLoading, refetch } = useQuery({
+  const { data, error, isLoading } = useQuery({
     queryKey: ['settings', user?.id],
     queryFn: fetchUser,
     staleTime: Infinity,

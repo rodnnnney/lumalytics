@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
+import { ChartDataItem } from '@/types/metaObj';
 
 interface CustomLabelsProps {
-  eventData?: any[];
+  eventData?: ChartDataItem[];
 }
 
 export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
@@ -17,8 +18,8 @@ export default function CustomLabels({ eventData = [] }: CustomLabelsProps) {
 
     const recentEvents = [...eventData]
       .sort((a, b) => {
-        const dateA = a.eventdate || a.date || '';
-        const dateB = b.eventdate || b.date || '';
+        const dateA = a.date || a.date || '';
+        const dateB = b.date || b.date || '';
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })
       .reverse();

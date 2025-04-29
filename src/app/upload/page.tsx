@@ -273,10 +273,12 @@ export default function Upload() {
       setIsUploading(false);
       router.push('/dashboard');
 
-      queryClient.invalidateQueries({ queryKey: ['userAnalytics', id] });
-      queryClient.invalidateQueries({ queryKey: ['settings', id] });
-      queryClient.invalidateQueries({ queryKey: ['csvMeta', id] });
-      queryClient.invalidateQueries({ queryKey: ['users', id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['userAnalytics', id] }),
+        queryClient.invalidateQueries({ queryKey: ['settings', id] }),
+        queryClient.invalidateQueries({ queryKey: ['csvMeta', id] }),
+        queryClient.invalidateQueries({ queryKey: ['users', id] }),
+      ]);
     }
   };
 
@@ -286,11 +288,6 @@ export default function Upload() {
     } else {
       router.push('/dashboard');
     }
-  };
-
-  const handleConfirmHome = () => {
-    setConfirmHome(false);
-    router.push('/dashboard');
   };
 
   return (
@@ -558,73 +555,69 @@ export default function Upload() {
         </div>
       ) : null}
 
-      {confirmDelete ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-semibold">Confirm Event Delete?</h3>
-            <p className="mb-2 text-gray-600">
-              <span className="italic">{shortenString(deleteItem?.eventName || '', 20) + ` `}</span>
-              will be deleted.
-            </p>
-            <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
-            <div className="flex justify-end space-x-3">
-              <Button
-                onClick={() => setConfirmDelete(false)}
-                variant="outline"
-                className="border-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  if (deleteItem) {
-                    handleDelete(deleteItem);
-                  }
-                }}
-                className="bg-red-500 hover:bg-luma-red text-white"
-              >
-                Confirm Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {confirmDelete ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-semibold">Confirm Event Delete?</h3>
-            <p className="mb-2 text-gray-600">
-              <span className="italic">{shortenString(deleteItem?.eventName || '', 20) + ` `}</span>
-              will be deleted.
-            </p>
-            <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
-            <div className="flex justify-end space-x-3">
-              <Button
-                onClick={() => setConfirmDelete(false)}
-                variant="outline"
-                className="border-gray-300"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  if (deleteItem) {
-                    handleDelete(deleteItem);
-                  }
-                }}
-                className="bg-red-500 hover:bg-luma-red text-white"
-              >
-                Confirm Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       {confirmHome ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-semibold">Confirm Event Delete?</h3>
+            <p className="mb-2 text-gray-600">You have unsaved changes.</p>
+            <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setConfirmDelete(false)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setConfirmHome(false);
+                  router.push('/dashboard');
+                }}
+                className="bg-red-500 hover:bg-luma-red text-white"
+              >
+                Go Home
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmDelete ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-semibold">Confirm Event Delete?</h3>
+            <p className="mb-2 text-gray-600">
+              <span className="italic">{shortenString(deleteItem?.eventName || '', 20) + ` `}</span>
+              will be deleted.
+            </p>
+            <p className="mb-6 text-gray-600 font-bold">This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setConfirmDelete(false)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (deleteItem) {
+                    handleDelete(deleteItem);
+                  }
+                }}
+                className="bg-red-500 hover:bg-luma-red text-white"
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmUploadToDb ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
           <div className="relative z-[70] w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
@@ -656,7 +649,7 @@ export default function Upload() {
                   <>
                     <div className="flex text-lg items-center space-x-4">
                       <p className=" text-black">Uploading</p>
-                      <div className="flex items-center w-[35px]  ">
+                      <div className="flex items-center w-[35px]">
                         <div className="loader "></div>
                       </div>
                     </div>

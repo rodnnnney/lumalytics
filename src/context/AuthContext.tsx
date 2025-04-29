@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  error: any | null;
+  error: Error | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser);
       } catch (catchError) {
         console.error('AuthContext: Exception fetching user:', catchError);
-        setError(catchError);
+        setError(catchError as Error);
       } finally {
         setLoading(false);
       }

@@ -30,19 +30,17 @@ export default function Sidebar() {
               href={item.href}
               className={`flex items-center px-4 py-3.5 my-1 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#7195e8]/10 to-[#f27676]/10 text-gray-800 shadow-sm'
+                  ? 'bg-gray-100 text-gray-800 shadow-sm'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
               }`}
             >
               <item.icon
                 className={`w-5 h-5 mr-3 transition-colors ${
-                  isActive ? 'text-[#7195e8]' : 'text-gray-400 group-hover:text-gray-500'
+                  isActive ? 'text-gray-700' : 'text-gray-400 group-hover:text-gray-500'
                 }`}
               />
               <span>{item.name}</span>
-              {isActive && (
-                <div className="ml-auto h-2 w-2 rounded-full bg-gradient-to-r from-[#7195e8] to-[#f27676]" />
-              )}
+              {isActive && <div className="ml-auto h-2 w-2 rounded-full bg-gray-400" />}
             </Link>
           );
         })}
