@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase/client';
 import { CsvMetaPayload } from '@/types/payloads';
+import { supabase } from '@/utils/supabase/client';
 
 /**
  * Sends a request to the "csv-to-meta" Edge Function with the provided payload.

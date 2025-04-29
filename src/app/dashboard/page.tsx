@@ -85,7 +85,7 @@ export default function Home() {
         const checkInRate = totalRsvps > 0 ? Math.round((totalCheckins / totalRsvps) * 100) : 0;
 
         const returningUsers = userAnalyticsData.filter(
-          (user: { total_events_checked_in: any }) => Number(user.total_events_checked_in) > 0
+          (user: { total_events_checked_in: [] }) => Number(user.total_events_checked_in) > 0
         ).length;
 
         console.log('Returning Users:', returningUsers);
