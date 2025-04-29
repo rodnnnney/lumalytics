@@ -45,7 +45,7 @@ export default function Upload() {
   const MAX_FILE_SIZE_MB = 1;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-  const handleFileChange = (event: any) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event || !event.target || !event.target.files) {
       console.error('Invalid event object in handleFileChange:', event);
       return;
@@ -285,11 +285,6 @@ export default function Upload() {
     } else {
       router.push('/dashboard');
     }
-  };
-
-  const confirmGoHome = () => {
-    setConfirmHome(false);
-    router.push('/dashboard');
   };
 
   return (

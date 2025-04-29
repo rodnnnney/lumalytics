@@ -4,15 +4,13 @@ import { userObject } from '@/types/metaObj';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+
 import { fetchReoccuring } from '@/queries/fetch';
 import Image from 'next/image';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function Users() {
-  const router = useRouter();
   const [sortField, setSortField] = useState('alpha');
   const [sortDirection, setSortDirection] = useState('desc');
   const [selectedUser, setSelectedUser] = useState<userObject | null>(null);

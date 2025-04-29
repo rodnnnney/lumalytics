@@ -108,10 +108,8 @@ export default function Home() {
           eventData: rawMetaData,
         };
 
-        // console.log('[INFO] - Processed Combined MetaData:', processedData.eventData);
         return processedData;
       } catch (fetchError) {
-        // console.error('Error fetching or processing data:', fetchError);
         throw fetchError instanceof Error ? fetchError : new Error(String(fetchError));
       }
     } else {
@@ -152,13 +150,7 @@ export default function Home() {
       localStorage.setItem('eventSortField', sortField);
       localStorage.setItem('eventSortDirection', sortDirection);
     }
-  }, [sortField, sortDirection]); // Still depends on the state variables
-
-  // const sortMetaData = () => {
-  //   return [...(data?.userAnalytics || [])].sort((a, b) => {
-  //     return new Date(a.eventdate).getTime() - new Date(b.eventdate).getTime();
-  //   });
-  // };
+  }, [sortField, sortDirection]);
 
   const handleSortToggle = (field: string) => {
     console.log(`[Dashboard Sort Toggle] Clicked field: ${field}. Current state:`, {
@@ -235,8 +227,6 @@ export default function Home() {
   };
 
   const sortedEventData = getSortedEventData();
-
-  //const sortedMetaData = sortMetaData();
 
   return (
     <div className="flex w-full flex-col">
