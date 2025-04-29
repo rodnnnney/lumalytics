@@ -31,7 +31,7 @@ export default function Home() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={['google']}
-          redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : ''}
+          redirectTo={`https://lumalytics.com/dashboard`}
         />
       </div>
     </div>

@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +17,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,13 +61,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Redirect if user is logged in and loading is complete
-  // useEffect(() => {
-  //   if (!loading && user) {
-  //     console.log('[AuthContext] User logged in, redirecting to /');
-  //     router.push('/');
-  //   }
-  // }, [user, loading, router]);
+  useEffect(() => {
+    if (!user && !loading && pathname !== '/') {
+      router.push('/');
+    }
+  }, [user, loading, pathname, router]);
 
   const value = { user, loading, error };
 
