@@ -7,6 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { fetchReoccuring } from '@/queries/fetch';
+import Image from 'next/image';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Users() {
   const router = useRouter();
@@ -64,9 +67,6 @@ export default function Users() {
     queryFn: fetchAllUsers,
     staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    // refetchOnMount: false,
-    // refetchOnWindowFocus: false,
-    // refetchOnReconnect: false,
     enabled: !!user && !authLoading,
   });
 
@@ -122,6 +122,7 @@ export default function Users() {
   // 3. yes user -> click another -> close then re
 
   const handleUserClick = (userData: userObject) => {
+    console.log(userData);
     // If the clicked user IS the currently selected user...
     if (selectedUser?.userid === userData.userid) {
       setSelectedUser(null); // ...close the sidebar by setting selectedUser to null.
@@ -173,6 +174,7 @@ export default function Users() {
 
   return (
     <div>
+      <ToastContainer />
       <div className="w-full min-h-screen">
         <p className="pb-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
           Attendees
@@ -197,14 +199,68 @@ export default function Users() {
                 </div>
 
                 <div className="space-y-4">
-                  <div>
+                  <div className="relative">
                     <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                    <p className="text-gray-800 font-medium">{selectedUser.name}</p>
+                    <div className="flex items-center">
+                      <p className="text-gray-800 mr-2">{selectedUser.name}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedUser.name);
+                          toast.success('Email copied to clipboard!', {
+                            position: 'bottom-right',
+                            autoClose: 2000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                          });
+                        }}
+                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                        title="Copy email"
+                      >
+                        <div className="h-[24px] w-[24px]">
+                          <Image
+                            src="/copy.png"
+                            alt="Copy"
+                            width={24}
+                            height={24}
+                            className="cursor-pointer"
+                          />
+                        </div>
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                    <p className="text-gray-800">{selectedUser.cleaned_email}</p>
+                    <div className="flex items-center">
+                      <p className="text-gray-800 mr-2">{selectedUser.cleaned_email}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedUser.cleaned_email);
+                          toast.success('Email copied to clipboard!', {
+                            position: 'bottom-right',
+                            autoClose: 2000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                          });
+                        }}
+                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                        title="Copy email"
+                      >
+                        <div className="h-[24px] w-[24px]">
+                          <Image
+                            src="/copy.png"
+                            alt="Copy"
+                            width={24}
+                            height={24}
+                            className="cursor-pointer"
+                          />
+                        </div>
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -264,45 +320,48 @@ export default function Users() {
                     )}
 
                   {Object.entries(selectedUser.all_custom_data).map(([key, value]) => {
-                    if (typeof value === 'object' && value !== null) {
-                      const eventData = value;
-                      return (
-                        <div key={key} className="bg-gray-50 p-3 rounded mb-3">
-                          <h3 className="text-sm font-medium text-gray-700">
-                            Event: {eventData.event}
-                          </h3>
-                          {eventData.custom_fields && (
-                            <div className="mt-2">
-                              <h4 className="text-xs font-medium text-gray-500">Custom Fields:</h4>
-                              <div className="pl-2 mt-1">
-                                {Object.entries(eventData.custom_fields).map(
-                                  ([fieldKey, fieldValue]) => (
-                                    <p key={fieldKey} className="text-sm text-gray-800">
-                                      <span className="font-medium">{fieldKey}:</span>{' '}
-                                      {fieldValue as string}
-                                    </p>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
+                    if (key === '' || !value || typeof value !== 'object') return null;
+                    const eventData = value;
+                    if (
+                      !eventData.custom_fields ||
+                      !Object.values(eventData.custom_fields).some(field => field !== null)
+                    )
+                      return null;
                     return (
-                      <div key={key}>
-                        <p className="text-gray-800">
-                          {key}: {value as string}
-                        </p>
+                      <div key={key} className="bg-gray-50 p-3 rounded mb-3">
+                        <h4 className="text-xs font-medium text-gray-500 mb-2">Custom Fields:</h4>
+                        <div className="pl-2">
+                          {Object.entries(eventData.custom_fields).map(([fieldKey, fieldValue]) => {
+                            if (fieldValue === null) return null;
+                            return (
+                              <p key={fieldKey} className="text-sm text-gray-800">
+                                <span className="font-medium">{fieldKey}:</span>{' '}
+                                {typeof fieldValue === 'string' &&
+                                fieldValue.match(/^https?:\/\//) ? (
+                                  <a
+                                    href={fieldValue}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline"
+                                  >
+                                    {fieldValue}
+                                  </a>
+                                ) : (
+                                  fieldValue
+                                )}
+                              </p>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
 
                   {selectedUser.average_rating && (
                     <div>
+                      <h3 className="text-sm font-medium text-gray-500">Average Rating</h3>
                       <p className="text-gray-800 font-bold">
-                        {`${Number(selectedUser.average_rating).toFixed()}/5` || 'No rating'}
+                        {`${Number(selectedUser.average_rating).toFixed(1)}/5`}
                       </p>
                     </div>
                   )}

@@ -30,7 +30,7 @@ export default function Sidebar() {
               href={item.href}
               className={`flex items-center px-4 py-3.5 my-1 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-gray-100 text-gray-800 shadow-sm'
+                  ? 'bg-gradient-to-r from-[#7195e8]/5 to-[#f27676]/5 p-4 shadow-md'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
               }`}
             >
