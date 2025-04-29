@@ -45,11 +45,11 @@ export default function Settings() {
   const { data, error, isLoading } = useQuery({
     queryKey: ['settings', user?.id],
     queryFn: fetchUser,
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    // refetchOnMount: false,
+    // refetchOnWindowFocus: false,
+    // refetchOnReconnect: false,
     enabled: !!user,
   });
 

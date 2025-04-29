@@ -127,7 +127,7 @@ export default function Home() {
   } = useQuery({
     queryKey: ['csvMeta', user?.id],
     queryFn: fetchCsvMetaData,
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
     // refetchOnMount: false,
     // refetchOnWindowFocus: false,

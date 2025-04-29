@@ -62,11 +62,11 @@ export default function Users() {
   const { data, error, isLoading } = useQuery({
     queryKey: ['users', user?.id],
     queryFn: fetchAllUsers,
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    // refetchOnMount: false,
+    // refetchOnWindowFocus: false,
+    // refetchOnReconnect: false,
     enabled: !!user && !authLoading,
   });
 
@@ -172,7 +172,7 @@ export default function Users() {
   }, [data, sortField, sortDirection]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex overflow-hidden">
       {/* User Info Panel */}
       <div
         className={`w-80 bg-white shadow-lg border-l border-gray-200 transition-all duration-300 transform ${

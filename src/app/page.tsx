@@ -3,6 +3,11 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 
+const redirectTo =
+  process.env.NODE_ENV === 'production'
+    ? 'https://lumalytics.app/auth/callback'
+    : 'http://localhost:3000/auth/callback';
+
 // Define server actions outside of the component
 async function signInWithGithub() {
   'use server';
@@ -19,7 +24,7 @@ async function signInWithGithub() {
   const { error, data } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: redirectTo,
     },
   });
 
@@ -46,7 +51,7 @@ async function signInWithGoogle() {
   const { error, data } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: redirectTo,
     },
   });
 

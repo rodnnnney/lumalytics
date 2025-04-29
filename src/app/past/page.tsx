@@ -75,11 +75,11 @@ export default function Past() {
   } = useQuery({
     queryKey: ['userAnalytics', user?.id],
     queryFn: fetchUserAnalytics,
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1 * 60 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    // refetchOnMount: false,
+    // refetchOnWindowFocus: false,
+    // refetchOnReconnect: false,
     enabled: !!user,
   });
 
