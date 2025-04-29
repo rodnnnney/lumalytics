@@ -45,24 +45,22 @@ export default function Upload() {
   const MAX_FILE_SIZE_MB = 1;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: any) => {
     if (!event || !event.target || !event.target.files) {
       console.error('Invalid event object in handleFileChange:', event);
       return;
     }
 
     const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-        alert(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
-        if (event.target) {
-          event.target.value = '';
-        }
-        setFile(new File([''], ''));
+    const isCSV = selectedFile.name.toLowerCase().endsWith('.csv');
 
-        return;
-      }
-
+    if (!isCSV) {
+      alert('Please upload a CSV file only.');
+      setFile(new File([''], ''));
+    } else if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      alert(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+      setFile(new File([''], ''));
+    } else {
       setFile(selectedFile);
     }
   };
@@ -491,6 +489,7 @@ export default function Upload() {
                           <label
                             htmlFor="file-upload"
                             className="relative cursor-pointer rounded-md font-medium text-luma-blue after:block after:content-[''] after:absolute after:bottom-0 after:left-0 after:h-[1px] after:bg-luma-blue after:w-full after:scale-x-0 hover:after:scale-x-100 after:transition after:duration-300 after:origin-bottom-left"
+                            onClick={e => e.stopPropagation()}
                           >
                             <span>Upload a file</span>
                             <input
