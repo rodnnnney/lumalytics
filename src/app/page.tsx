@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 
 // Define server actions outside of the component
-async function signInWithGithub(formData: FormData) {
+async function signInWithGithub() {
   'use server';
 
   const supabase = await createClient();
@@ -31,7 +31,7 @@ async function signInWithGithub(formData: FormData) {
   return redirect(data.url);
 }
 
-async function signInWithGoogle(formData: FormData) {
+async function signInWithGoogle() {
   'use server';
 
   const supabase = await createClient();
