@@ -240,12 +240,11 @@ export default function Home() {
 
   return (
     <div className="flex w-full flex-col">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
-            Your overview
-          </p>
-        </div>
+      <p className="mb-4 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent">
+        Your overview
+      </p>
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1"></div>
         <div className="flex items-center gap-4">
           <Select value={timeRange} onValueChange={setTimeRange} />
           <Button

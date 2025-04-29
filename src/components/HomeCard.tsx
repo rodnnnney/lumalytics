@@ -41,7 +41,7 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
         isHovered &&
         ReactDOM.createPortal(
           <div
-            className="fixed bg-gray-400 border border-luma-light-green text-white text-xs rounded px-3 py-2 shadow-lg z-[9999] whitespace-pre-line pointer-events-none"
+            className="fixed bg-white shadow text-black text-xs rounded px-3 py-2 shadow-lg z-[9999] whitespace-pre-line pointer-events-none"
             style={{
               left: mousePos.x + 12,
               top: mousePos.y + 12,
@@ -53,9 +53,9 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
                   // If item[0] is an array, render as a list
                   if (Array.isArray(item[0])) {
                     return (
-                      <ul key={idx} className="list-disc list-inside pl-4">
+                      <ul key={idx} className="text-black list-disc list-inside pl-4">
                         {(item[0] as string[]).map((str, i) => (
-                          <li key={i} className="text-gray-200">
+                          <li key={i} className="text-black">
                             {str}
                           </li>
                         ))}
@@ -66,8 +66,8 @@ export function HomeCard({ value, description, hoverInfo }: HomeCardProps) {
                     const [label, value] = item;
                     return (
                       <div key={idx} className="flex">
-                        <span className="font-semibold text-white mr-2">{label}:</span>
-                        <span className="text-gray-200 pl-2">{value}</span>
+                        <span className="font-semibold text-black mr-2">{label}:</span>
+                        <span className="text-black pl-2">{value}</span>
                       </div>
                     );
                   }
