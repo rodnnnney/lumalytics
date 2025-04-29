@@ -270,15 +270,14 @@ export default function Upload() {
     } catch (error) {
       console.error(`[ERROR] - Failed to process upload ${error}`);
     } finally {
-      setIsUploading(false);
-      router.push('/dashboard');
-
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userAnalytics', id] }),
         queryClient.invalidateQueries({ queryKey: ['settings', id] }),
         queryClient.invalidateQueries({ queryKey: ['csvMeta', id] }),
         queryClient.invalidateQueries({ queryKey: ['users', id] }),
       ]);
+      setIsUploading(false);
+      router.push('/dashboard');
     }
   };
 
@@ -291,7 +290,7 @@ export default function Upload() {
   };
 
   return (
-    <div className="bg-white h-[93vh]">
+    <div className="h-[93vh]">
       <div className="flex items-center justify-between px-4 ">
         <p className="p-12 inline-block w-fit bg-gradient-to-r from-[#7195e8] to-[#f27676] bg-clip-text text-2xl font-bold text-transparent ">
           Upload
@@ -645,18 +644,7 @@ export default function Upload() {
                 className="bg-luma-blue hover:bg-luma-blue text-white disabled:opacity-50 "
                 disabled={isUploading}
               >
-                {isUploading ? (
-                  <>
-                    <div className="flex text-lg items-center space-x-4">
-                      <p className=" text-black">Uploading</p>
-                      <div className="flex items-center w-[35px]">
-                        <div className="loader "></div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  'Confirm Upload'
-                )}
+                {isUploading ? 'Uploading...' : 'Confirm Upload'}
               </Button>
             </div>
           </div>

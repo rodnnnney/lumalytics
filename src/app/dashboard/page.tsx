@@ -129,9 +129,9 @@ export default function Home() {
     queryFn: fetchCsvMetaData,
     staleTime: Infinity,
     gcTime: 1 * 60 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    // refetchOnMount: false,
+    // refetchOnWindowFocus: false,
+    // refetchOnReconnect: false,
     enabled: !!user,
   });
 
