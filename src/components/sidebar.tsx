@@ -3,8 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HomeIcon, ClockIcon, UsersIcon, CogIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/context/AuthContext';
+import { ComponentType } from 'react';
+import Image from 'next/image';
 
-const navItems = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: ComponentType<React.SVGProps<SVGSVGElement>>;
+}
+
+const navItems: NavItem[] = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
   { name: 'Events', href: '/past', icon: ClockIcon },
   { name: 'Attendees', href: '/users', icon: UsersIcon },
@@ -13,6 +22,7 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <div className="fixed inset-y-0 left-0 z-40 w-64 bg-white text-black shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-300 ease-in-out">
@@ -46,10 +56,29 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="absolute bottom-14 left-0 right-0 p-6">
         <div className="rounded-lg bg-gradient-to-r from-[#7195e8]/5 to-[#f27676]/5 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-600 mb-2">Dashboard Version</p>
           <p className="text-sm font-bold text-gray-800">v1.0 (Beta)</p>
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="rounded-lg flex items-center">
+          {user?.user_metadata?.avatar_url ? (
+            <Image
+              src={user.user_metadata.avatar_url}
+              alt="Profile picture"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full mr-3"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">?</span>
+            </div>
+          )}
+          <p className="text-sm font-bold text-gray-800">{user?.user_metadata?.name || 'User'}</p>
         </div>
       </div>
     </div>

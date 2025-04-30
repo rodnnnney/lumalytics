@@ -4,9 +4,7 @@ import { userObject } from '@/types/metaObj';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-
 import { fetchReoccuring } from '@/queries/fetch';
-import Image from 'next/image';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -200,64 +198,50 @@ export default function Users() {
                   <div className="relative">
                     <h3 className="text-sm font-medium text-gray-500">Name</h3>
                     <div className="flex items-center">
-                      <p className="text-gray-800 mr-2">{selectedUser.name}</p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedUser.name);
-                          toast.success('Email copied to clipboard!', {
-                            position: 'bottom-right',
-                            autoClose: 2000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                          });
-                        }}
-                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        title="Copy email"
-                      >
-                        <div className="h-[24px] w-[24px]">
-                          <Image
-                            src="/copy.png"
-                            alt="Copy"
-                            width={24}
-                            height={24}
-                            className="cursor-pointer"
-                          />
-                        </div>
-                      </button>
+                      <p className="text-gray-800 mr-2 cursor-pointer relative group">
+                        <span
+                          className="inline-block hover:text-luma-blue transition-colors transition-all duration-300"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedUser.name);
+                            toast.success('Name copied to clipboard!', {
+                              position: 'bottom-right',
+                              autoClose: 2000,
+                              hideProgressBar: false,
+                              closeOnClick: true,
+                              pauseOnHover: true,
+                              draggable: true,
+                            });
+                          }}
+                        >
+                          {selectedUser.name}
+                        </span>
+                        <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-luma-blue transition-all duration-300 group-hover:w-full"></span>
+                      </p>
                     </div>
                   </div>
 
                   <div className="relative">
                     <h3 className="text-sm font-medium text-gray-500">Email</h3>
                     <div className="flex items-center">
-                      <p className="text-gray-800 mr-2">{selectedUser.cleaned_email}</p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedUser.cleaned_email);
-                          toast.success('Email copied to clipboard!', {
-                            position: 'bottom-right',
-                            autoClose: 2000,
-                            hideProgressBar: false,
-                            closeOnClick: true,
-                            pauseOnHover: true,
-                            draggable: true,
-                          });
-                        }}
-                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        title="Copy email"
-                      >
-                        <div className="h-[24px] w-[24px]">
-                          <Image
-                            src="/copy.png"
-                            alt="Copy"
-                            width={24}
-                            height={24}
-                            className="cursor-pointer"
-                          />
-                        </div>
-                      </button>
+                      <p className="text-gray-800 mr-2 cursor-pointer relative group">
+                        <span
+                          className="inline-block hover:text-luma-blue transition-colors transition-all duration-300"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedUser.cleaned_email);
+                            toast.success('Email copied to clipboard!', {
+                              position: 'bottom-right',
+                              autoClose: 2000,
+                              hideProgressBar: false,
+                              closeOnClick: true,
+                              pauseOnHover: true,
+                              draggable: true,
+                            });
+                          }}
+                        >
+                          {selectedUser.cleaned_email}
+                        </span>
+                        <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-luma-blue transition-all duration-300 group-hover:w-full"></span>
+                      </p>
                     </div>
                   </div>
 

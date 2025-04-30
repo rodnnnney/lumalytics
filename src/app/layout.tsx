@@ -15,8 +15,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://lumalytics.app'),
   title: 'Lumalytics',
-  description: 'A lightweight analytics platform for Luma Hosts',
+  description:
+    "Onchain Storage, Live on Base. A Jackal Outpost is a smart contract that brings Jackal's trustless data layer to any chain.",
+  icons: [
+    {
+      rel: 'icon',
+      type: 'image/svg',
+      sizes: '32x32',
+      url: '/logo.svg',
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

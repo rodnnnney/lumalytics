@@ -62,8 +62,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!user && !loading && pathname !== '/') {
+    if (!user && !loading && pathname !== '/' && pathname !== '/login') {
       router.push('/');
+    }
+  }, [user, loading, pathname, router]);
+
+  useEffect(() => {
+    if (user && !loading && (pathname === '/' || pathname === '/login')) {
+      router.push('/dashboard');
     }
   }, [user, loading, pathname, router]);
 

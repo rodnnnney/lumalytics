@@ -624,9 +624,11 @@ export default function Upload() {
 
             {uploadItems.map(item => (
               <div key={item.eventName}>
-                <p className="text-lg font-medium">{item.eventName}</p>
-                <p className="text-sm">{item.eventDate}</p>
-                <p className="text-sm ">{formatBytes(item.file.size)}</p>
+                <div className="mb-2">
+                  <p className="text-lg font-medium">{item.eventName}</p>
+                  <p className="text-sm">{item.eventDate}</p>
+                  <p className="text-sm ">{formatBytes(item.file.size)}</p>
+                </div>
               </div>
             ))}
             <div className="flex justify-end space-x-3 disabled:opacity-50">

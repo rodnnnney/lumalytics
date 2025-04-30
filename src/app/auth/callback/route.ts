@@ -7,7 +7,6 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code');
 
     if (!code) {
-      // If no code is provided, redirect to home page
       return NextResponse.redirect(`${requestUrl.origin}/`);
     }
 
