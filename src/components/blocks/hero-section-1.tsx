@@ -189,7 +189,7 @@ export function HeroSection() {
                         'transition-colors duration-200 ease-in-out',
                         selectedOption === option
                           ? 'text-white bg-luma-blue rounded-lg'
-                          : 'text-gray-700 hover:bg-luma-red/10 rounded-lg'
+                          : 'text-gray-700 hover:bg-luma-red rounded-lg'
                       )}
                       onClick={() => setSelectedOption(option)}
                     >
