@@ -4,6 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faUpload,
+  faCalendarAlt,
+  faTachometerAlt,
+  faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { cn } from '@/utils/util';
@@ -32,11 +39,41 @@ const transitionVariants = {
 export function HeroSection() {
   const router = useRouter();
 
+  type OptionType = 'Upload' | 'Events' | 'Dashboard' | 'Attendees';
+  const options: OptionType[] = ['Upload', 'Events', 'Dashboard', 'Attendees'];
+
+  const [selectedOption, setSelectedOption] = React.useState<OptionType>('Upload');
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setSelectedOption(currentOption => {
+        const currentIndex = options.indexOf(currentOption);
+        const nextIndex = (currentIndex + 1) % options.length;
+        return options[nextIndex];
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [options]);
+
+  const optionIcons = {
+    Upload: faUpload,
+    Events: faCalendarAlt,
+    Dashboard: faTachometerAlt,
+    Attendees: faUsers,
+  };
+
+  const optionImages: Record<OptionType, string> = {
+    Upload: '/uploads.png',
+    Events: '/events.png',
+    Dashboard: '/home1.svg',
+    Attendees: '/users.svg',
+  };
+
   return (
     <>
       <HeroHeader />
       <main className="overflow-hidden">
-        {/* Cover background SVG */}
         <div aria-hidden className="absolute inset-0 -z-30 w-full h-full">
           <Image src="/bg1.svg" alt="Background" className="w-full h-full object-cover" fill />
         </div>
@@ -144,6 +181,29 @@ export function HeroSection() {
                 ...transitionVariants,
               }}
             >
+              <div className="flex items-center justify-center mt-8">
+                <div className="inline-flex bg-white/70 backdrop-blur-md rounded-lg shadow-sm px-6 py-2 gap-2">
+                  {options.map(option => (
+                    <div
+                      key={option}
+                      className={cn(
+                        'px-4 py-2 transition-all duration-500 cursor-pointer relative',
+                        selectedOption === option
+                          ? 'font-bold text-primary bg-luma-blue rounded-lg text-black'
+                          : 'text-gray-700 hover:bg-luma-red rounded-lg'
+                      )}
+                      onClick={() => setSelectedOption(option)}
+                    >
+                      <FontAwesomeIcon icon={optionIcons[option]} className="mr-2" />
+                      {option}
+                      {selectedOption === option && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary mx-auto w-3/4 animate-pulse" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="relative mx-auto mt-8 px-4 sm:px-6 md:mt-12 lg:mt-16 w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-[85vw]">
                 <div
                   aria-hidden
@@ -152,16 +212,16 @@ export function HeroSection() {
                 <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto overflow-hidden rounded-xl border shadow-lg shadow-zinc-950/15 ring-1">
                   <div className="max-h-[50vh] sm:max-h-[60vh] md:max-h-[70vh] overflow-hidden">
                     <Image
-                      className="bg-background w-full h-auto aspect-auto relative hidden dark:block object-contain"
-                      src="/home1.svg"
-                      alt="app screen"
+                      className="bg-background w-full h-auto aspect-auto relative hidden dark:block object-contain transition-opacity duration-300"
+                      src={optionImages[selectedOption] || '/home1.svg'}
+                      alt={`${selectedOption} screen`}
                       width={1200}
                       height={800}
                     />
                     <Image
-                      className="z-2 border-border/25 w-full h-auto aspect-auto relative border dark:hidden object-contain"
-                      src="/home1.svg"
-                      alt="app screen"
+                      className="z-2 border-border/25 w-full h-auto aspect-auto relative border dark:hidden object-contain transition-opacity duration-300"
+                      src={optionImages[selectedOption] || '/home1.svg'}
+                      alt={`${selectedOption} screen`}
                       width={1200}
                       height={800}
                     />
