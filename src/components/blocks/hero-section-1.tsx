@@ -181,7 +181,7 @@ export function HeroSection() {
                 ...transitionVariants,
               }}
             >
-              <div className="flex items-center justify-center mt-8">
+              <div className="hidden md:flex items-center justify-center mt-8">
                 <div className="inline-flex bg-white/70 backdrop-blur-md rounded-lg shadow-sm px-6 py-2 gap-2">
                   {options.map(option => (
                     <div
@@ -189,7 +189,7 @@ export function HeroSection() {
                       className={cn(
                         'px-4 py-2 transition-all duration-500 cursor-pointer relative',
                         selectedOption === option
-                          ? 'font-bold text-primary bg-luma-blue rounded-lg text-black'
+                          ? 'text-primary bg-luma-blue rounded-lg text-white'
                           : 'text-gray-700 hover:bg-luma-red rounded-lg'
                       )}
                       onClick={() => setSelectedOption(option)}
