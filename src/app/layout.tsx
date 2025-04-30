@@ -17,8 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://lumalytics.app'),
   title: 'Lumalytics',
-  description:
-    "Onchain Storage, Live on Base. A Jackal Outpost is a smart contract that brings Jackal's trustless data layer to any chain.",
+  description: 'A lightweight analytics platform for Luma Hosts',
   icons: [
     {
       rel: 'icon',
