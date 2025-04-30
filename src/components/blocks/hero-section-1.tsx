@@ -242,7 +242,7 @@ export function HeroSection() {
 }
 
 const menuItems = [
-  { name: 'Documentation', href: 'https://lumalytics.mintlify.app/introduction', target: '_blank' },
+  { name: 'Documentation', href: 'https://lumalytics.mintlify.app/introduction' },
   { name: 'About', href: '/' },
 ];
 
@@ -279,7 +279,11 @@ const HeroHeader = () => {
               <ul className="flex gap-8 text-sm">
                 {menuItems.map((item, index) => (
                   <li key={index}>
-                    <Link href={item.href} className=" hover:text-accent-foreground block">
+                    <Link
+                      href={item.href}
+                      className=" hover:text-accent-foreground block"
+                      target={item.name === 'Documentation' ? '_blank' : undefined}
+                    >
                       <span className="text-lg font-semibold">{item.name}</span>
                     </Link>
                   </li>
@@ -301,6 +305,7 @@ const HeroHeader = () => {
                       <Link
                         href={item.href}
                         className="text-muted-foreground hover:text-accent-foreground block"
+                        target={item.name === 'Documentation' ? '_blank' : undefined}
                       >
                         <span>{item.name}</span>
                       </Link>
