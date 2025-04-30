@@ -20,17 +20,15 @@ const transitionVariants = {
   item: {
     hidden: {
       opacity: 0,
-      filter: 'blur(12px)',
-      y: 12,
+      y: 8,
     },
     visible: {
       opacity: 1,
-      filter: 'blur(0px)',
       y: 0,
       transition: {
-        type: 'spring',
-        bounce: 0.3,
-        duration: 1.5,
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 0.6,
       },
     },
   },
@@ -151,7 +149,7 @@ export function HeroSection() {
                     size="lg"
                     className="rounded-xl px-3 md:px-5  text-base bg-white text-black"
                   >
-                    <Link href="/">
+                    <Link href="https://lumalytics.mintlify.app/introduction" target="_blank">
                       <span className="text-nowrap">Read Docs</span>
                     </Link>
                   </Button>
@@ -173,8 +171,8 @@ export function HeroSection() {
                 container: {
                   visible: {
                     transition: {
-                      staggerChildren: 0.05,
-                      delayChildren: 0.75,
+                      staggerChildren: 0.02,
+                      delayChildren: 0.5,
                     },
                   },
                 },
@@ -187,10 +185,11 @@ export function HeroSection() {
                     <div
                       key={option}
                       className={cn(
-                        'px-4 py-2 transition-all duration-500 cursor-pointer relative',
+                        'px-4 py-2 cursor-pointer relative',
+                        'transition-colors duration-200 ease-in-out',
                         selectedOption === option
-                          ? 'text-primary bg-luma-blue rounded-lg text-white'
-                          : 'text-gray-700 hover:bg-luma-red rounded-lg'
+                          ? 'text-white bg-luma-blue rounded-lg'
+                          : 'text-gray-700 hover:bg-luma-red/10 rounded-lg'
                       )}
                       onClick={() => setSelectedOption(option)}
                     >
@@ -243,7 +242,7 @@ export function HeroSection() {
 }
 
 const menuItems = [
-  { name: 'Documentation', href: '/' },
+  { name: 'Documentation', href: 'https://lumalytics.mintlify.app/introduction', target: '_blank' },
   { name: 'About', href: '/' },
 ];
 
