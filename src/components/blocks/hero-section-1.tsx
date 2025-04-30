@@ -38,7 +38,10 @@ export function HeroSection() {
   const router = useRouter();
 
   type OptionType = 'Upload' | 'Events' | 'Dashboard' | 'Attendees';
-  const options: OptionType[] = ['Upload', 'Events', 'Dashboard', 'Attendees'];
+  const options = React.useMemo<OptionType[]>(
+    () => ['Upload', 'Events', 'Dashboard', 'Attendees'],
+    []
+  );
 
   const [selectedOption, setSelectedOption] = React.useState<OptionType>('Upload');
 
