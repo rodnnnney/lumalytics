@@ -8,7 +8,6 @@ const redirectTo =
     ? 'https://lumalytics.app/auth/callback'
     : 'http://localhost:3000/auth/callback';
 
-// Define server actions outside of the component
 async function signInWithGithub() {
   'use server';
 
