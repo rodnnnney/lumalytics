@@ -287,7 +287,7 @@ export const HeroHeader = () => {
                     <Link
                       href={item.href}
                       className=" hover:text-accent-foreground block"
-                      target={item.name === 'Documentation' ? '_blank' : undefined}
+                      target="_blank"
                     >
                       <span className="text-lg font-semibold">{item.name}</span>
                     </Link>
