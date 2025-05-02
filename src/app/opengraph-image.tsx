@@ -11,9 +11,7 @@ export const size = {
 export default async function Image() {
   // Using static image URL directly
   const baseUrl =
-    process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000'
-      : `https://www.lumalytics.app/`;
+    process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://www.lumalytics.app`;
 
   // Reference to your public image
   const ogImageUrl = `${baseUrl}/home.png`;
