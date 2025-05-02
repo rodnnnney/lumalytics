@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 export const fetchMeta = async (userid: string) => {
   const { data, error } = await supabase.from('allMeta').select('*').eq('userid', userid);

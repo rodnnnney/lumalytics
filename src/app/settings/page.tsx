@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { supabase } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 export default function Settings() {
   const [showLogout, setShowLogout] = useState(false);

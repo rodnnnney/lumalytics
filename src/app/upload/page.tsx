@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { formatBytes } from '@/utils/format';
 import { shortenString } from '@/utils/shorten';
-import { uploadFile } from '@/utils/supabase/upload';
+import { uploadFile } from '@/lib/supabase/upload';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useRef } from 'react';

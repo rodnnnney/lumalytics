@@ -75,9 +75,6 @@ export function HeroSection() {
     <>
       <HeroHeader />
       <main className="overflow-hidden">
-        <div aria-hidden className="absolute inset-0 -z-30 w-full h-full">
-          <Image src="/bg1.svg" alt="Background" className="w-full h-full object-cover" fill />
-        </div>
         <div
           aria-hidden
           className="z-[2] absolute inset-0 pointer-events-none isolate opacity-50 contain-strict hidden lg:block"
@@ -161,7 +158,7 @@ export function HeroSection() {
                     size="lg"
                     className="rounded-xl px-3 md:px-5 text-base bg-black text-white"
                   >
-                    <div className="cursor-pointer" onClick={() => router.push('/login')}>
+                    <div className="cursor-pointer" onClick={() => router.push('/auth/login')}>
                       <span className="text-nowrap">Get Started</span>
                     </div>
                   </Button>
@@ -249,7 +246,7 @@ const menuItems = [
   { name: 'About', href: '/' },
 ];
 
-const HeroHeader = () => {
+export const HeroHeader = () => {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [isScrolled] = React.useState(true);
   const router = useRouter();
@@ -265,9 +262,13 @@ const HeroHeader = () => {
         >
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
             <div className="flex w-full justify-between lg:w-auto">
-              <Link href="/" aria-label="home" className="flex items-center space-x-2">
+              <div
+                aria-label="home"
+                className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => router.push('/')}
+              >
                 <Logo />
-              </Link>
+              </div>
 
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
@@ -322,7 +323,7 @@ const HeroHeader = () => {
                   size="lg"
                   className="rounded-xl px-5 py-2 text-base bg-black text-white"
                 >
-                  <div className="cursor-pointer" onClick={() => router.push('/login')}>
+                  <div className="cursor-pointer" onClick={() => router.push('/auth/login')}>
                     <span className="text-nowrap">Get Started</span>
                   </div>
                 </Button>
