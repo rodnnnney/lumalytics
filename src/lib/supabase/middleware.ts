@@ -1,6 +1,37 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const PUBLIC_PATHS = [
+  '/auth/login',
+  '/auth/sign-up',
+  '/auth/callback',
+  '/auth/reset-password',
+  '/',
+];
+
+const AUTH_PATHS = ['/auth'];
+
+// Paths that require authentication
+const PROTECTED_PATHS = ['/dashboard', '/profile', '/projects', '/settings', '/api'];
+
+/**
+ * Checks if a URL pathname should be protected (requires authentication)
+ */
+function isProtectedPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.some(path => pathname === path)) {
+    return false;
+  }
+
+  if (AUTH_PATHS.some(path => pathname.startsWith(path))) {
+    return false;
+  }
+
+  if (PROTECTED_PATHS.some(path => pathname.startsWith(path))) {
+    return true;
+  }
+  return true;
+}
+
 export async function updateSession(request: NextRequest) {
   // Create *one* response object that will be mutated as needed.
   const response = NextResponse.next({
@@ -37,48 +68,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') && // Ensure '/login' itself is accessible
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/')
+  const pathname = request.nextUrl.pathname;
 
-    // Allow access to auth routes like /auth/oauth, /auth/login
-  ) {
-    // No user, redirect to login.
+  // Check if the path requires authentication and user is not logged in
+  if (!user && isProtectedPath(pathname)) {
+    // No user and protected path, redirect to login
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/login'; // Ensure this matches your actual login page route
-    console.log('Redirecting to login, user not found on path:', request.nextUrl.pathname); // Add logging
+    url.pathname = '/auth/login';
+    console.log('Redirecting to login, user not found on protected path:', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // If user is logged in and trying to access auth pages (like login/signup), redirect to dashboard
+  if (user && AUTH_PATHS.some(path => pathname.startsWith(path))) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard'; // Redirect to dashboard or home page
     return NextResponse.redirect(url);
   }
 
   // IMPORTANT: Return the *one* response object that Supabase mutated.
   return response;
 }
-
-// Ensure you have a middleware.ts file that uses this function:
-/*
-import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware' // Adjust path if needed
-
-export async function middleware(request: NextRequest) {
-  // Skip middleware for static assets, api routes etc. if needed
-  if (
-    request.nextUrl.pathname.startsWith('/_next') ||
-    request.nextUrl.pathname.startsWith('/api') || // Adjust if your auth callback is an API route
-    request.nextUrl.pathname.includes('.') // Skip files
-  ) {
-    return NextResponse.next()
-  }
-
-  return await updateSession(request)
-}
-
-export const config = {
-  matcher: [
-    // Match all routes except specific ones if necessary
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
-
-*/

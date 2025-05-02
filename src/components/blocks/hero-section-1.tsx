@@ -153,6 +153,7 @@ export function HeroSection() {
                       <span className="text-nowrap">Read Docs</span>
                     </Link>
                   </Button>
+
                   <Button
                     asChild
                     size="lg"
@@ -321,10 +322,20 @@ export const HeroHeader = () => {
                 <Button
                   asChild
                   size="lg"
-                  className="rounded-xl px-5 py-2 text-base bg-black text-white"
+                  className="rounded-xl px-5 py-2 text-base bg-white text-black"
                 >
                   <div className="cursor-pointer" onClick={() => router.push('/auth/login')}>
-                    <span className="text-nowrap">Get Started</span>
+                    <span className="text-nowrap">Login</span>
+                  </div>
+                </Button>
+
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-xl px-5 py-2 text-base bg-black text-white"
+                >
+                  <div className="cursor-pointer" onClick={() => router.push('/auth/sign-up')}>
+                    <span className="text-nowrap">Sign Up</span>
                   </div>
                 </Button>
               </div>
