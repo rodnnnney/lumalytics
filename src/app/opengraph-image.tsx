@@ -29,10 +29,11 @@ export default async function Image() {
         <img
           src={ogImageUrl}
           alt={alt}
+          width={1200}
+          height={630}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>
-    ),
-    size
+    )
   );
 }
