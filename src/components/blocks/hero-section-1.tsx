@@ -244,7 +244,7 @@ export function HeroSection() {
 
 const menuItems = [
   { name: 'Documentation', href: 'https://docs.lumalytics.app/introduction' },
-  { name: 'About', href: '/' },
+  { name: 'About', href: 'https://www.rodney.lol/blog/lumalytics.html' },
 ];
 
 export const HeroHeader = () => {
