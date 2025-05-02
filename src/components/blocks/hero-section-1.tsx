@@ -39,11 +39,11 @@ export function HeroSection() {
 
   type OptionType = 'Upload' | 'Events' | 'Dashboard' | 'Attendees';
   const options = React.useMemo<OptionType[]>(
-    () => ['Upload', 'Events', 'Dashboard', 'Attendees'],
+    () => ['Dashboard', 'Upload', 'Events', 'Attendees'],
     []
   );
 
-  const [selectedOption, setSelectedOption] = React.useState<OptionType>('Upload');
+  const [selectedOption, setSelectedOption] = React.useState<OptionType>('Dashboard');
 
   React.useEffect(() => {
     const interval = setInterval(() => {
