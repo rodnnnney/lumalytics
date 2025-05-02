@@ -149,7 +149,7 @@ export function HeroSection() {
                     size="lg"
                     className="rounded-xl px-3 md:px-5  text-base bg-white text-black"
                   >
-                    <Link href="https://lumalytics.mintlify.app/introduction" target="_blank">
+                    <Link href="https://docs.lumalytics.app/introduction" target="_blank">
                       <span className="text-nowrap">Read Docs</span>
                     </Link>
                   </Button>
@@ -243,7 +243,7 @@ export function HeroSection() {
 }
 
 const menuItems = [
-  { name: 'Documentation', href: 'https://lumalytics.mintlify.app/introduction' },
+  { name: 'Documentation', href: 'https://docs.lumalytics.app/introduction' },
   { name: 'About', href: '/' },
 ];
 
