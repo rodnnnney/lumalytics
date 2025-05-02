@@ -34,6 +34,10 @@ export default async function Image() {
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>
-    )
+    ),
+    {
+      width: 1200,
+      height: 630,
+    }
   );
 }
